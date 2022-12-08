@@ -1,20 +1,23 @@
 <template>
-  <v-alert title="Alert title" text="..." type="success"></v-alert>
+  <NavBar>
+  </NavBar>
+  <SideBar>
+  </SideBar>
 </template>
 
 <script>
 import { defineComponent } from 'vue';
 
 // Components
-import HelloWorld from '../components/HelloWorld.vue';
 import NavBar from '../components/NavBar.vue'
+import SideBar from '../components/SideBar.vue'
 
 export default defineComponent({
   name: 'HomeView',
 
   components: {
-    HelloWorld,
     NavBar,
+    SideBar,
   },
 });
 </script>
