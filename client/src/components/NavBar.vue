@@ -10,7 +10,7 @@ import NavBarAccount from './icons/NavBarAccount.vue';
         <v-toolbar-title>
           <v-toolbar-title>
             <v-img src="../images/sci-kmitl-logo.png" max-width="250" max-height="48">
-              <v-btn height="64" width="256">
+              <v-btn height="64" width="256" to="/">
               </v-btn>
             </v-img>
           </v-toolbar-title>
