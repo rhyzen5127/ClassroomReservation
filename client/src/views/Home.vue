@@ -13,7 +13,7 @@ import NavBar from '../components/NavBar.vue'
 import SideBar from '../components/SideBar.vue'
 
 export default defineComponent({
-  name: 'HomeView',
+  name: 'Home',
 
   components: {
     NavBar,
