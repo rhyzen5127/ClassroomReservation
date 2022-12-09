@@ -18,9 +18,9 @@ import SideBarAccount from './icons/SideBarAccount.vue'
           <v-list-item color="orange" prepend-icon="mdi-calendar" title="ประวัติการจอง" value="history" to="/history"></v-list-item>
           <v-list-item color="orange" prepend-icon="mdi-map" title="ดูแผนที่ห้องเรียน" value="map" to="/map"></v-list-item>
           <v-list-item color="cyan" prepend-icon="mdi-wrench" title="อนุมัติคำขอจอง"
-            value="manageReservations" to="/manageReservations"></v-list-item>
+            value="manageReservations" to="/managereservations"></v-list-item>
           <v-list-item color="cyan" prepend-icon="mdi-wrench" title="จัดการรายละเอียดห้องเรียน"
-            value="manageClassroomDetails" to="/manageClassroomDetails"></v-list-item>
+            value="manageClassroomDetails" to="/manageclassroomdetails"></v-list-item>
         </v-list>
       </v-navigation-drawer>
 

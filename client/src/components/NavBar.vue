@@ -6,7 +6,6 @@ import NavBarAccount from './icons/NavBarAccount.vue';
   <v-card>
     <v-layout>
       <v-app-bar color="#ff7a00" prominent>
-
         <v-toolbar-title>
           <v-toolbar-title>
             <v-img src="../images/sci-kmitl-logo.png" max-width="250" max-height="48">
