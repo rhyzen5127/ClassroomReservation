@@ -1,24 +1,16 @@
 <template>
-    <NavBar>
-    </NavBar>
-    <SideBar>
-    </SideBar>
-  </template>
+</template>
   
-  <script>
-  import { defineComponent } from 'vue';
-  
-  // Components
-  import NavBar from '../components/NavBar.vue'
-  import SideBar from '../components/SideBar.vue'
-  
-  export default defineComponent({
-    name: 'ManageReservations',
-  
-    components: {
-      NavBar,
-      SideBar,
-    },
-  });
-  </script>
+<script>
+import { defineComponent } from 'vue';
+
+// Components
+
+export default defineComponent({
+  name: 'ManageReservations',
+
+  components: {
+  },
+});
+</script>
   

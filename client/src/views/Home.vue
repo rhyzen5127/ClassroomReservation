@@ -1,23 +1,11 @@
 <template>
-  <NavBar>
-  </NavBar>
-  <SideBar>
-  </SideBar>
+  <div>
+    Hello
+  </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-
-// Components
-import NavBar from '../components/NavBar.vue'
-import SideBar from '../components/SideBar.vue'
-
-export default defineComponent({
+  export default {
   name: 'Home',
-
-  components: {
-    NavBar,
-    SideBar,
-  },
-});
+}
 </script>

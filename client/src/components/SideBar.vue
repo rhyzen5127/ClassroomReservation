@@ -1,30 +1,81 @@
-<script setup>
-import SideBarAccount from './icons/SideBarAccount.vue'
-</script>
-
 <template>
-  <v-card>
-    <v-layout>
-      <v-navigation-drawer expand-on-hover rail>
-        <SideBarAccount>
-        </SideBarAccount>
+  <div>
+    <v-navigation-drawer expand-on-hover rail permanent>
+      <SideBarAccount>
+      </SideBarAccount>
 
-        <v-divider></v-divider>
+      <v-divider/>
 
-        <v-list density="compact" nav>
-          <v-list-item color="orange" prepend-icon="mdi-home" title="หน้าหลัก" value="้home" to="/"></v-list-item>
-          <v-list-item color="orange" prepend-icon="mdi-book" title="จองห้องเรียน" value="book"
-            to="/reservation"></v-list-item>
-          <v-list-item color="orange" prepend-icon="mdi-calendar" title="ประวัติการจอง" value="history" to="/history"></v-list-item>
-          <v-list-item color="orange" prepend-icon="mdi-map" title="ดูแผนที่ห้องเรียน" value="map" to="/map"></v-list-item>
-          <v-list-item color="cyan" prepend-icon="mdi-wrench" title="อนุมัติคำขอจอง"
-            value="manageReservations" to="/managereservations"></v-list-item>
-          <v-list-item color="cyan" prepend-icon="mdi-wrench" title="จัดการรายละเอียดห้องเรียน"
-            value="manageClassroomDetails" to="/manageclassroomdetails"></v-list-item>
-        </v-list>
-      </v-navigation-drawer>
+      <v-list density="compact" nav>
+        <template v-for="item in nav_item" :key="item.title">
+          <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
+            :to="item.to">
+          </v-list-item>
+        </template>
 
-      <v-main style="height: 25000px"></v-main>
-    </v-layout>
-  </v-card>
+      </v-list>
+    </v-navigation-drawer>
+  </div>
 </template>
+
+<script>
+import SideBarAccount from './icons/SideBarAccount.vue'
+
+export default {
+  // Components
+  components: {
+    SideBarAccount,
+  },
+
+  // Variables
+  data: () => ({
+    nav_item: [
+      {
+        color: "orange",
+        icon: "mdi-home",
+        title: "หน้าหลัก",
+        value: "home",
+        to: "/"
+      },
+      {
+        color: "orange",
+        icon: "mdi-book",
+        title: "จองห้องเรียน",
+        value: "reservation",
+        to: "/reservation"
+      },
+      {
+        color: "orange",
+        icon: "mdi-calendar",
+        title: "ประวัติการจอง",
+        value: "history",
+        to: "/history"
+      },
+      {
+        color: "orange",
+        icon: "mdi-map",
+        title: "ดูแผนที่ห้องเรียน",
+        value: "map",
+        to: "/map"
+      },
+      {
+        color: "cyan",
+        icon: "mdi-wrench",
+        title: "อนุมัติคำขอจอง",
+        value: "manageReservations",
+        to: "/managereservations"
+      },
+      {
+        color: "cyan",
+        icon: "mdi-wrench",
+        title: "จัดการรายละเอียดห้องเรียน",
+        value: "manageClassroomDetails",
+        to: "/manageclassroomdetails"
+      },
+    ]
+  }),
+  // Methods/Function
+  methods: {
+  },
+}
+</script>

@@ -8,7 +8,9 @@ import NavBarAccount from './icons/NavBarAccount.vue';
         <v-toolbar-title>
           <v-img :src="logoPath"
                   max-width="250"
-                  max-height="48">
+                  max-height="48"
+                  @click="onClickRedirect2Home()"
+                  class="hover-logo">
           </v-img>
         </v-toolbar-title>
 
@@ -34,6 +36,7 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 export default {
   data: () => ({
     logoPath: new URL("@/assets/images/sci-kmitl-logo.png", import.meta.url).href,
+    // logoPath: require("@/assets/images/sci-kmitl-logo.png"),
   }),
 
   methods: {
