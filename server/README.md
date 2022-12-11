@@ -7,4 +7,6 @@ Then, configure the server in `src\main\resources\application.properties` first.
 
 ## Start server
 
-To be added
+Run `mvn spring-boot:run` to start the server.
+
+The main class `ClassReserver` can also be run to start the server directly.
