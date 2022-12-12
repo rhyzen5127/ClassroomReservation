@@ -1,16 +1,14 @@
 <template>
   <div>
     <v-navigation-drawer expand-on-hover rail permanent>
-      <SideBarAccount>
-      </SideBarAccount>
+      <SideBarAccount/>
 
-      <v-divider/>
+      <v-divider />
 
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
           <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
-            :to="item.to">
-          </v-list-item>
+            :to="item.to" />
         </template>
 
       </v-list>

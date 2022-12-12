@@ -1,15 +1,17 @@
 <template>
-    <div>Reservation</div>
-  </template>
+  <div>
+    Reservation
+  </div>
+</template>
   
-  <script>
-  import { defineComponent } from 'vue';
-  
-  export default defineComponent({
-    name: 'Reservation',
-  
-    components: {
-    },
-  });
-  </script>
+<script>
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'Reservation',
+
+  components: {
+  },
+});
+</script>
   

@@ -4,30 +4,27 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 
 <template>
   <div>
-      <v-app-bar color="#ff7a00" prominent>
-        <v-toolbar-title>
-          <v-img :src="logoPath"
-                  max-width="250"
-                  max-height="48">
-          </v-img>
-        </v-toolbar-title>
+    <v-app-bar color="#ff7a00" prominent>
+      <v-toolbar-title>3
+        <v-img :src="logoPath" max-width="250" max-height="48"/>
+      </v-toolbar-title>
 
-        <v-spacer>
-        </v-spacer>
+      <v-spacer>
+      </v-spacer>
 
-        <v-btn color="white" icon="mdi-calendar"></v-btn>
+      <v-btn color="white" icon="mdi-calendar"/>
 
-        <v-btn color="white" icon="mdi-bell"></v-btn>
+      <v-btn color="white" icon="mdi-bell"/>
 
-        <NavBarAccount
-          title="Rhyzen MK"
-        ></NavBarAccount>
+      <v-btn color="white" to="/about" icon="mdi-exclamation-thick"/>
 
-      </v-app-bar>
+      <NavBarAccount title="Rhyzen MK"></NavBarAccount>
 
-      <v-navigation-drawer v-model="drawer" location="bottom" temporary>
-        <v-list :items="items"></v-list>
-      </v-navigation-drawer>
+    </v-app-bar>
+
+    <v-navigation-drawer v-model="drawer" location="bottom" temporary>
+      <v-list :items="items"/>
+    </v-navigation-drawer>
   </div>
 </template>
 <script>
