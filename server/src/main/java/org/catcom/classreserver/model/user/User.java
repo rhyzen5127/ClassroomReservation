@@ -3,6 +3,12 @@ package org.catcom.classreserver.model.user;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import net.minidev.json.annotate.JsonIgnore;
+import org.catcom.classreserver.model.classroom.Classroom;
+import org.catcom.classreserver.model.reservation.Reservation;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -36,5 +42,11 @@ public class User
     @Column(nullable = false)
     @Getter @Setter
     private Boolean enabled;
+
+    // one-to-many relationship collections
+
+    @OneToMany(targetEntity = Reservation.class, mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Reservation> reservations = new ArrayList<>();
 
 }

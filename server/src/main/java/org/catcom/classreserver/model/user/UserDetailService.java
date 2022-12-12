@@ -9,12 +9,12 @@ public class UserDetailService implements UserDetailsService
 {
 
     @Autowired
-    private UserRepos repos;
+    private UserRepos userRepos;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
-        var user = repos.findByEmail(username);
+        var user = userRepos.findByEmail(username);
         if (user == null)
             throw new UsernameNotFoundException("User not found: " + username);
         return new UserDetail(user);

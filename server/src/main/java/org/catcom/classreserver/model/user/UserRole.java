@@ -5,27 +5,31 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.List;
 
-public enum UserRole {
+public enum UserRole implements GrantedAuthority {
 
     USER {
         @Override
-        public List<GrantedAuthority> getAuthorities() { return List.of( AUTH_USER ); }
+        public String getAuthority()
+        {
+            return "user";
+        }
     },
 
     STAFF {
         @Override
-        public List<GrantedAuthority> getAuthorities() { return List.of( AUTH_USER, AUTH_STAFF ); }
+        public String getAuthority()
+        {
+            return "staff";
+        }
     },
 
     ADMIN {
         @Override
-        public List<GrantedAuthority> getAuthorities() { return List.of( AUTH_USER, AUTH_STAFF, AUTH_ADMIN ); }
+        public String getAuthority()
+        {
+            return "admin";
+        }
     }
-    ;
 
-    private static final GrantedAuthority AUTH_USER = () -> "user";
-    private static final GrantedAuthority AUTH_STAFF = () -> "staff";
-    private static final GrantedAuthority AUTH_ADMIN = () -> "admin";
 
-    public List<GrantedAuthority> getAuthorities() { return null; }
 }
