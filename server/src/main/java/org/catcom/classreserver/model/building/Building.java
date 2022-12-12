@@ -26,6 +26,8 @@ public class Building {
     @Getter @Setter
     private Integer levels;
 
+    // one-to-many relationship collections
+
     @OneToMany(targetEntity = Classroom.class, mappedBy = "building", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Classroom> classrooms = new ArrayList<>();
