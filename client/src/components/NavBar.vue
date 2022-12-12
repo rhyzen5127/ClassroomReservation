@@ -5,7 +5,7 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 <template>
   <div>
     <v-app-bar color="#ff7a00" prominent>
-      <v-toolbar-title>3
+      <v-toolbar-title>
         <v-img :src="logoPath" max-width="250" max-height="48"/>
       </v-toolbar-title>
 
