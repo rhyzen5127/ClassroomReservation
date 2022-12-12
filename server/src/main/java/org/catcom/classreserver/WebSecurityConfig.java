@@ -50,7 +50,9 @@ public class WebSecurityConfig
     {
         http.authorizeHttpRequests()
 
-                .requestMatchers("/users").authenticated()
+                .requestMatchers("/classrooms").authenticated()
+                .requestMatchers("/reservations").authenticated()
+                .requestMatchers("/users").hasRole("staff")
                 .anyRequest().permitAll()
                 .and()
 
