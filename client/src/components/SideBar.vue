@@ -2,7 +2,7 @@
   <div>
     <v-navigation-drawer permanent>
       <SideBarAccount/>
-
+      
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
           <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
