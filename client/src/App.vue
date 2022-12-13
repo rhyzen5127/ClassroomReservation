@@ -12,6 +12,7 @@
 // Components
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
+import axios from 'axios'
 
 export default {
   name: 'App',
@@ -24,5 +25,11 @@ export default {
   data: () => ({
     //
   }),
+
+  methods: {
+  },
+
+  mounted() {
+  }
 }
 </script>
