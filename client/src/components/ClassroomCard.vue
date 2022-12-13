@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<v-card class="" max-width="512" max-height="300">
+		<v-card class="" max-width="650" max-height="300">
 			<v-card-item>
 				<v-row>
 					<v-col cols="12" md="4">

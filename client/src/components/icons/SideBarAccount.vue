@@ -11,6 +11,6 @@
       <v-list-item 
         title="Login"/>
     </v-btn>
-    <hr />
+    <hr/>
   </div>
 </template>
