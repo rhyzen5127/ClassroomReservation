@@ -1,12 +1,13 @@
 <template>
   <div>
-    <v-btn height="80">
+    <v-btn height="80" style="boxShadow: none;">
       <v-list>
         <v-list-item
-          prepend-avatar="https://scontent.fbkk5-6.fna.fbcdn.net/v/t39.30808-6/312106403_827419461939402_8561526570817010683_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=09cbfe&_nc_eui2=AeFfMiYzjjHFjmIbXScUqAO63qtRIY5QaOTeq1EhjlBo5HYdh3uFurHBSOUvVvlCz6Mrc2hKtD7q1CuGHHovmg4S&_nc_ohc=dkSrzUEdDX8AX91uh0q&_nc_ht=scontent.fbkk5-6.fna&oh=00_AfCZp8EbwgA0uN1LHHuKJYgbikMbYPwfXPUXOT51H9cSjw&oe=6397104C"
+          prepend-avatar="https://scontent.fbkk22-8.fna.fbcdn.net/v/t39.30808-6/319666732_871747604173254_5992482641832258112_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=09cbfe&_nc_eui2=AeG4C-Ud-71lDi6YjgDu_-a_B1ZB0DiUz5QHVkHQOJTPlCALVb6HSgzoaSktfNmyw09o_kDBzsZ5QDUQNIqepA1V&_nc_ohc=O196nff9f_wAX-364Q4&_nc_ht=scontent.fbkk22-8.fna&oh=00_AfBY0Ad6Ju9dHk10Hzhnktejd18KISa7f6c7XkWv-aQ__g&oe=639DA7AC"
           title="Voraphat Asawathongchai"
           subtitle="zc.pbc.gg@gmail.com"/>
       </v-list>
     </v-btn>
+    <hr/>
   </div>
 </template>

@@ -1,9 +1,7 @@
 <template>
   <div>
-    <v-navigation-drawer expand-on-hover rail permanent>
+    <v-navigation-drawer permanent>
       <SideBarAccount/>
-
-      <v-divider />
 
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
