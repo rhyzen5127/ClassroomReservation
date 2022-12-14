@@ -1,10 +1,10 @@
 package org.catcom.classreserver.model.classroom;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.minidev.json.annotate.JsonIgnore;
 import org.catcom.classreserver.model.building.Building;
 import org.catcom.classreserver.model.reservation.Reservation;
 
@@ -54,6 +54,7 @@ public class Classroom
 
     @OneToMany(targetEntity = Reservation.class, mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
+    @Getter
     private List<Reservation> reservations = new ArrayList<>();
 
     public boolean isReady()

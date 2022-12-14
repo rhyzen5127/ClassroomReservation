@@ -1,9 +1,9 @@
 package org.catcom.classreserver.model.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.reservation.Reservation;
 

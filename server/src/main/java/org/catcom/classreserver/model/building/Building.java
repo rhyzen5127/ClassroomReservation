@@ -1,10 +1,10 @@
 package org.catcom.classreserver.model.building;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.minidev.json.annotate.JsonIgnore;
 import org.catcom.classreserver.model.classroom.Classroom;
 
 import java.util.ArrayList;
