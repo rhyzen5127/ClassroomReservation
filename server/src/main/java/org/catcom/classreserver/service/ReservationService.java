@@ -1,26 +1,26 @@
-package org.catcom.classreserver.model.reservation;
+package org.catcom.classreserver.service;
 
 import jakarta.annotation.Nullable;
 import lombok.NonNull;
-import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.exceptions.ReservationException;
 import org.catcom.classreserver.model.classroom.Classroom;
-import org.catcom.classreserver.model.classroom.ClassroomManager;
+import org.catcom.classreserver.model.reservation.Reservation;
+import org.catcom.classreserver.model.reservation.ReservationRepos;
 import org.catcom.classreserver.model.user.User;
-import org.catcom.classreserver.model.user.UserRepos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-@Component
-public class ReservationManager
+@Service
+public class ReservationService
 {
     @Autowired
     private ReservationRepos reservationRepos;
 
     @Autowired
-    private ClassroomManager classroomManager;
+    private ClassroomService classroomService;
 
     public void reserve(
             User reserver,

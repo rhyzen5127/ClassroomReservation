@@ -1,14 +1,14 @@
-package org.catcom.classreserver.model.classroom;
+package org.catcom.classreserver.service;
 
 import jakarta.annotation.Nullable;
 import org.catcom.classreserver.exceptions.ClassroomException;
+import org.catcom.classreserver.model.classroom.Classroom;
+import org.catcom.classreserver.model.classroom.ClassroomRepos;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
-@Component
-public class ClassroomManager
+@Service
+public class ClassroomService
 {
     @Autowired
     private ClassroomRepos classroomRepos;

@@ -60,6 +60,11 @@ public class UserDetail implements UserDetails
         return user.getEnabled();
     }
 
+    public boolean isStaff()
+    {
+        return getAuthorities().contains(UserRole.STAFF);
+    }
+
     public int getId()
     {
         return user.getId();

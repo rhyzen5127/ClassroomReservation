@@ -16,6 +16,16 @@ public class UserDetailService implements UserDetailsService
     @Autowired
     private UserRepos userRepos;
 
+    public UserDetail loadUserById(int id) throws UsernameNotFoundException
+    {
+        var user = userRepos.findById(id);
+
+        if (user.isEmpty())
+            throw new UsernameNotFoundException("User not found: " + id);
+
+        return new UserDetail(user.get());
+    }
+
     @Override
     public UserDetail loadUserByUsername(String username) throws UsernameNotFoundException
     {
