@@ -75,10 +75,11 @@ public class ClassReserver
 		return userRepos.findAll();
 	}
 
-	@GetMapping("/users/{id}")
-	@ResponseBody User getUserById(@PathVariable Integer id)
+	@GetMapping("/users/current")
+	@ResponseBody User getCurrentUser(Authentication auth)
 	{
-		return userRepos.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		var userDetail = userDetailService.loadByAuthentication(auth);
+		return userDetail.getUser();
 	}
 
 	@PostMapping("/login/token")

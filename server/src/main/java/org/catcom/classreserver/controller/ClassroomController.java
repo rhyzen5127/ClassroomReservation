@@ -2,6 +2,7 @@ package org.catcom.classreserver.controller;
 
 import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.form.EditClassroomForm;
+import org.catcom.classreserver.model.building.BuildingRepos;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.user.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
@@ -20,6 +21,9 @@ public class ClassroomController
 {
 
     @Autowired
+    private BuildingRepos buildingRepos;
+
+    @Autowired
     private UserDetailService userDetailService;
 
     @Autowired
@@ -36,6 +40,19 @@ public class ClassroomController
         return classroomService.getAllClassrooms();
     }
 
+    @GetMapping("/buildings/{buildingId}/classrooms")
+    @ResponseBody
+    Iterable<Classroom> getClassroomOfBuilding(@PathVariable Integer buildingId)
+    {
+        var building = buildingRepos.findById(buildingId);
+
+        if (building.isEmpty())
+        {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Building not found");
+        }
+
+        return building.get().getClassrooms();
+    }
 
     @GetMapping("/classrooms/{id}")
     @ResponseBody Classroom getClassroomById(

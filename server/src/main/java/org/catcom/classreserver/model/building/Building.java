@@ -30,6 +30,7 @@ public class Building {
 
     @OneToMany(targetEntity = Classroom.class, mappedBy = "building", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
+    @Getter
     private List<Classroom> classrooms = new ArrayList<>();
 
 }
