@@ -18,7 +18,7 @@ const options = reactive({
         right: 'dayGridMonth,dayGridWeek,listDay'
     },
     editable: true,
-    selectable: true,
+    selectable: false,
     weekends: true,
     select: (arg) => {
         id.value = id.value + 1
