@@ -61,3 +61,6 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# public/private key certificates
+*.pem
