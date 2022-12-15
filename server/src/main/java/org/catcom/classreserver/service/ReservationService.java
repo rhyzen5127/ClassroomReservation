@@ -124,6 +124,27 @@ public class ReservationService
     }
 
 
+    public boolean isRoomAvailableAtGivenSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
+    {
+        var reservations = reservationRepos.findByRoomId(classroom.getId());
+
+        for (var reservation : reservations)
+        {
+            // check for overlapped schedule
+            var curStartTime = reservation.getStartTime();
+            var curFinishTime = reservation.getFinishTime();
+            if (    curStartTime.isBefore(startTime) &&
+                    curFinishTime.isAfter(startTime) ||
+                    curStartTime.isBefore(finishTime) &&
+                            curFinishTime.isAfter(finishTime)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void validateReservedRoom(
             @Nullable Classroom room
     ) throws ReservationException
@@ -146,23 +167,9 @@ public class ReservationService
             @NonNull LocalDateTime finishTime
     ) throws ReservationException
     {
-
-        var reservations = reservationRepos.findByRoomId(classroom.getId());
-
-        for (var reservation : reservations)
-        {
-            // check for overlapped schedule
-            var curStartTime = reservation.getStartTime();
-            var curFinishTime = reservation.getFinishTime();
-            if (    curStartTime.isBefore(startTime) &&
-                    curFinishTime.isAfter(startTime) ||
-                    curStartTime.isBefore(finishTime) &&
-                            curFinishTime.isAfter(finishTime)
-            ) {
-                throw new ReservationException("The requested room is not available for the given time");
-            }
+        if (!isRoomAvailableAtGivenSchedule(classroom, startTime, finishTime)) {
+            throw new ReservationException("The requested room is not available for the given time");
         }
-
     }
 
     void validateStatus(

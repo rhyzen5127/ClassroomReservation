@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class ReservationController
@@ -156,6 +158,33 @@ public class ReservationController
         {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
+    }
+
+
+    @GetMapping("/classrooms/{roomId}/availability")
+    @ResponseBody Map<String, Boolean> checkScheduleAvailability(
+            @PathVariable Integer roomId,
+            @RequestParam LocalDateTime startTime,
+            @RequestParam LocalDateTime finishTime
+    )
+    {
+        try
+        {
+            var room = classroomService.findRoom(roomId);
+
+            var response = new HashMap<String, Boolean>();
+            var roomAvailable = reservationService.isRoomAvailableAtGivenSchedule(room, startTime, finishTime);
+
+            response.put("available", roomAvailable);
+
+            return response;
+
+        }
+        catch (ClassroomException e)
+        {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+
     }
 
     // POST edit reservation data
