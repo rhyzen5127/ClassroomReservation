@@ -48,13 +48,6 @@ export default {
         to: "/history"
       },
       {
-        color: "orange",
-        icon: "mdi-map",
-        title: "ดูแผนที่ห้องเรียน",
-        value: "map",
-        to: "/map"
-      },
-      {
         color: "cyan",
         icon: "mdi-wrench",
         title: "อนุมัติคำขอจอง",

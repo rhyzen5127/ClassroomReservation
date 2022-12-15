@@ -4,7 +4,8 @@
 			<v-card-item>
 				<v-row>
 					<v-col cols="12" md="4">
-						<v-img src="https://cdn.vuetifyjs.com/images/cards/halcyon.png" max-width="512" max-height="512"></v-img>
+						<v-img src="https://cdn.vuetifyjs.com/images/cards/halcyon.png" max-width="512"
+							max-height="512"></v-img>
 					</v-col>
 					<v-col cols="12" md="8">
 						<div class="text-overline mb-1">
@@ -23,6 +24,12 @@
 							จำนวนที่นั่ง: ประมาณ 500 ที่นั่ง
 						</div>
 						<v-card-actions class="mx-auto justify-end">
+							<div class="text-caption mr-1">
+								สถานะ:
+							</div>
+							<div class="text-caption mr-5" color="">
+								รอการอนุมัติ
+							</div>
 							<v-btn variant="outlined">
 								จัดการ
 							</v-btn>
