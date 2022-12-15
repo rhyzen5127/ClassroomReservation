@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-navigation-drawer permanent>
-      <SideBarAccount/>
-      
+      <SideBarAccount />
+
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
           <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
@@ -36,7 +36,7 @@ export default {
       {
         color: "orange",
         icon: "mdi-book",
-        title: "จองห้องเรียน",
+        title: "ค้นหาหรือจองห้องเรียน",
         value: "reservation",
         to: "/reservation"
       },
