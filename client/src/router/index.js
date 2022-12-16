@@ -25,11 +25,6 @@ const router = createRouter({
       component: () => import('../views/History.vue')
     },
     {
-      path: '/map',
-      name: 'map',
-      component: () => import('../views/Map.vue')
-    },
-    {
       path: '/managereservations',
       name: 'managereservations',
       component: () => import('../views/ManageReservations.vue')
