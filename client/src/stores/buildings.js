@@ -1,17 +1,17 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
+import axios from '../plugins/axios.js'
 
-export const buildingStore = defineStore('building', () => {
+export const useBuildingStore = defineStore('building', () => {
 
 	const buildings = ref([])
 
-	const doubleCount = computed(() => count.value * 2)
-
-	async function fetch() {
-		buildings.value = []
-		// buildings.value = await axios.get('/buildings')
+	async function fetchAll() {
+		let res = await axios.get('/buildings')
+		buildings.value = res.data
+		return buildings.value
 	}
   
-	return { buildings, fetch }
+	return { buildings, fetchAll }
 
   })
