@@ -1,21 +1,37 @@
 package org.catcom.classreserver.service;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import lombok.NonNull;
 import org.catcom.classreserver.exceptions.ReservationException;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.reservation.Reservation;
 import org.catcom.classreserver.model.reservation.ReservationRepos;
 import org.catcom.classreserver.model.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService
 {
+
+    private Logger log = LoggerFactory.getLogger(ReservationService.class);
+
+    @Autowired
+    private EntityManager entityManager;
+
     @Autowired
     private ReservationRepos reservationRepos;
 
@@ -42,9 +58,50 @@ public class ReservationService
         newReservation.setFinishTime(finishTime);
         newReservation.setStatus("pending");
 
-        // reservationRepos.save(newReservation);
+        reservationRepos.save(newReservation);
 
     }
+
+    public List<Reservation> findReservations(@Nullable User owner, @Nullable String status)
+    {
+        return findReservations(owner, null, status);
+    }
+
+    public List<Reservation> findReservations(@Nullable Classroom classroom, @Nullable String status)
+    {
+        return findReservations(null, classroom, status);
+    }
+
+    public List<Reservation> findReservations(
+        @Nullable User owner,
+        @Nullable Classroom classroom,
+        @Nullable String status
+    )
+    {
+
+        var specs = new ArrayList<Specification<Reservation>>();
+
+        if (owner != null)
+        {
+            specs.add(ReservationRepos.hasOwner(owner));
+        }
+
+        if (classroom != null)
+        {
+            specs.add(ReservationRepos.forRoom(classroom));
+        }
+
+        if (status != null)
+        {
+            specs.add(ReservationRepos.hasStatus(status));
+        }
+
+        var spec = Specification.allOf(specs);
+
+        return reservationRepos.findAll(spec);
+
+    }
+
 
     public Reservation getReservation(int id) throws ReservationException
     {
@@ -55,26 +112,6 @@ public class ReservationService
         }
 
         return reservation.get();
-    }
-
-    public Iterable<Reservation> getUserReservation(@NonNull User user)
-    {
-        return reservationRepos.findByOwnerId(user.getId());
-    }
-
-    public Iterable<Reservation> getUserReservation(@NonNull User user, @NonNull String status)
-    {
-        return reservationRepos.findByOwnerIdAndStatus(user.getId(), status);
-    }
-
-    public Iterable<Reservation> getAllReservation()
-    {
-        return reservationRepos.findAll();
-    }
-
-    public Iterable<Reservation> getAllReservation(@NonNull String status)
-    {
-        return reservationRepos.findByStatus(status);
     }
 
     public void updateReservation(
@@ -126,7 +163,7 @@ public class ReservationService
 
     public boolean isRoomAvailableAtGivenSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        var reservations = reservationRepos.findByRoomId(classroom.getId());
+        var reservations = reservationRepos.findByRoomIdAndStatus(classroom.getId(), "approved");
 
         for (var reservation : reservations)
         {

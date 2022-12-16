@@ -5,18 +5,18 @@ import lombok.NonNull;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @ToString
 public class ReserveForm
 {
-    @NonNull
     private int roomId;
 
     @NonNull
-    private LocalDateTime startTime;
+    private ZonedDateTime startTime;
 
     @NonNull
-    private LocalDateTime finishTime;
+    private ZonedDateTime finishTime;
 
 }

@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,36 +34,10 @@ public class ReservationController
     @Autowired
     private ClassroomService classroomService;
 
-    // GET all reservations
-    @GetMapping("/reservations")
-    @ResponseBody
-    Iterable<Reservation> getAllReservations(
-            Authentication auth,
-            @RequestParam(required = false) String status
-    )
-    {
-
-        var requestingUserDetail = userDetailService.loadByAuthentication(auth);
-
-        if (requestingUserDetail == null)
-        {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-
-        if (status == null)
-        {
-            return reservationService.getAllReservation();
-        }
-
-        return reservationService.getAllReservation(status);
-
-    }
-
     // GET reservation by id
     @GetMapping("/reservations/{id}")
     @ResponseBody Reservation getReservationById(@PathVariable Integer id)
     {
-
         try
         {
             return reservationService.getReservation(id);
@@ -73,20 +49,27 @@ public class ReservationController
 
     }
 
+    // GET all reservations
+    @GetMapping("/reservations")
+    @ResponseBody List<Reservation> getAllReservations(
+            Authentication auth,
+            @RequestParam(required = false) String status
+    )
+    {
+        return reservationService.findReservations(null, null, status);
+    }
+
     // GET reservation of a room
     @GetMapping("/classrooms/{roomId}/reservations")
-    @ResponseBody Iterable<Reservation> getReservationOfRoom(
+    @ResponseBody List<Reservation> getReservationOfRoom(
             @PathVariable Integer roomId,
             @RequestParam(required = false) String status
     )
     {
-
         try
         {
-
             var room = classroomService.findRoom(roomId);
-
-            return room.getReservations();
+            return reservationService.findReservations(room, status);
         }
         catch (ClassroomException e)
         {
@@ -97,7 +80,7 @@ public class ReservationController
 
     // GET reservation of a user
     @GetMapping("/users/{userId}/reservations")
-    @ResponseBody Iterable<Reservation> getReservationOfUser(
+    @ResponseBody List<Reservation> getReservationOfUser(
             Authentication auth,
             @PathVariable Integer userId,
             @RequestParam(required = false) String status
@@ -105,24 +88,14 @@ public class ReservationController
     {
         var requestingUserDetail = userDetailService.loadByAuthentication(auth);
 
-        if (requestingUserDetail == null)
-        {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-
         if (!requestingUserDetail.isStaff() && requestingUserDetail.getId() != userId)
         {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staffs can get reservations of other user directly");
         }
 
-        var userDetail = userDetailService.loadUserById(userId);
+        var user = userDetailService.loadUserById(userId).getUser();
 
-        if (status == null)
-        {
-            return reservationService.getUserReservation(userDetail.getUser());
-        }
-
-        return reservationService.getUserReservation(userDetail.getUser(), status);
+        return reservationService.findReservations(user, status);
 
     }
 
@@ -132,11 +105,6 @@ public class ReservationController
     {
 
         var userDetail = userDetailService.loadByAuthentication(auth);
-
-        if (userDetail == null)
-        {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
         try
         {
@@ -149,8 +117,8 @@ public class ReservationController
                     userDetail.getUser(),
                     reserveRoom,
                     reserveTime,
-                    form.getStartTime(),
-                    form.getFinishTime()
+                    form.getStartTime().toLocalDateTime(),
+                    form.getFinishTime().toLocalDateTime()
             );
 
         }
@@ -164,19 +132,19 @@ public class ReservationController
     @GetMapping("/classrooms/{roomId}/availability")
     @ResponseBody Map<String, Boolean> checkScheduleAvailability(
             @PathVariable Integer roomId,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime finishTime
+            @RequestParam ZonedDateTime startTime,
+            @RequestParam ZonedDateTime finishTime
     )
     {
         try
         {
+
             var room = classroomService.findRoom(roomId);
 
+            var roomAvailable = reservationService.isRoomAvailableAtGivenSchedule(room, startTime.toLocalDateTime(), finishTime.toLocalDateTime());
+
             var response = new HashMap<String, Boolean>();
-            var roomAvailable = reservationService.isRoomAvailableAtGivenSchedule(room, startTime, finishTime);
-
             response.put("available", roomAvailable);
-
             return response;
 
         }
@@ -228,11 +196,14 @@ public class ReservationController
 
             var newReservedRoom = classroomService.findRoom(form.getRoomId());
 
+            var newStartTime = form.getStartTime() == null ? null : form.getStartTime().toLocalDateTime();
+            var newFininshTime = form.getFinishTime() == null ? null : form.getStartTime().toLocalDateTime();
+
             reservationService.updateReservation(
                     id,
                     newReservedRoom,
-                    form.getStartTime(),
-                    form.getFinishTime(),
+                    newStartTime,
+                    newFininshTime,
                     form.getStatus()
             );
 

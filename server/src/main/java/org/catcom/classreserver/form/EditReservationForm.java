@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 public class EditReservationForm
@@ -13,10 +14,10 @@ public class EditReservationForm
     private Integer roomId;
 
     @Nullable
-    private LocalDateTime startTime;
+    private ZonedDateTime startTime;
 
     @Nullable
-    private LocalDateTime finishTime;
+    private ZonedDateTime finishTime;
 
     @Nullable
     private String status;

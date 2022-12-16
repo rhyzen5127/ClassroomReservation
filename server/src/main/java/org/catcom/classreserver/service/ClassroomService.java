@@ -7,13 +7,15 @@ import org.catcom.classreserver.model.classroom.ClassroomRepos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ClassroomService
 {
     @Autowired
     private ClassroomRepos classroomRepos;
 
-    public Iterable<Classroom> getAllClassrooms()
+    public List<Classroom> getAllClassrooms()
     {
         return classroomRepos.findAll();
     }
@@ -29,12 +31,20 @@ public class ClassroomService
     }
 
     public void updateRoomDetail(
-            String id,
+            int id,
             @Nullable Integer width,
             @Nullable Integer length,
             @Nullable Integer seats,
             @Nullable String status
     ) throws ClassroomException
     {
+        var room = findRoom(id);
+
+        if (width != null) room.setWidth(width);
+        if (length != null) room.setLength(length);
+        if (seats != null) room.setSeats(seats);
+        if (status != null) room.setStatus(status);
+
+        classroomRepos.save(room);
     }
 }
