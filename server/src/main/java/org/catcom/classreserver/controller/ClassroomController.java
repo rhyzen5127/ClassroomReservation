@@ -72,7 +72,7 @@ public class ClassroomController
     @PostMapping("/classrooms/{id}")
     void editClassroom(
             Authentication auth,
-            @PathVariable String id,
+            @PathVariable Integer id,
             @RequestBody EditClassroomForm form
     )
     {
