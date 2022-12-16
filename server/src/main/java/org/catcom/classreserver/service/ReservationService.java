@@ -160,7 +160,7 @@ public class ReservationService
 
     public boolean isRoomAvailableAtGivenSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        var reservations = reservationRepos.findByRoomIdAndStatus(classroom.getId(), "approved");
+        var reservations = findReservations(classroom, "approved");
 
         for (var reservation : reservations)
         {
@@ -170,7 +170,7 @@ public class ReservationService
             if (    curStartTime.isBefore(startTime) &&
                     curFinishTime.isAfter(startTime) ||
                     curStartTime.isBefore(finishTime) &&
-                            curFinishTime.isAfter(finishTime)
+                    curFinishTime.isAfter(finishTime)
             ) {
                 return false;
             }

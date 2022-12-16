@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -143,14 +144,12 @@ public class ReservationController
 
             var roomAvailable = reservationService.isRoomAvailableAtGivenSchedule(room, startTime.toLocalDateTime(), finishTime.toLocalDateTime());
 
-            var response = new HashMap<String, Boolean>();
-            response.put("available", roomAvailable);
-            return response;
+            return Map.of( "available", roomAvailable );
 
         }
         catch (ClassroomException e)
         {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
 
     }
