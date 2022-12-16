@@ -18,7 +18,7 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 
       <v-btn color="white" to="/about" icon="mdi-exclamation-thick"/>
 
-      <NavBarAccount title="Rhyzen MK"></NavBarAccount>
+      <NavBarAccount :title="this.title" :isLoggedIn="this.isLoggedIn"></NavBarAccount>
 
     </v-app-bar>
 
@@ -29,6 +29,19 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 </template>
 <script>
 export default {
+  props: {
+    title: {
+      type: String,
+      require: true,
+      default: "",
+    },
+    isLoggedIn: {
+      type: Boolean,
+      require: true,
+      default: false,
+    }
+  },
+
   data: () => ({
     logoPath: new URL("@/assets/images/sci-kmitl-logo.png", import.meta.url).href,
   }),

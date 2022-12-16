@@ -1,9 +1,9 @@
 <template>
   <v-app>
     <v-main>
-      <NavBar/>
-      <SideBar/>
-      <router-view/>
+      <NavBar :title="title" :isLoggedIn="isLoggedIn" />
+      <SideBar :title="title" :email="email" :isLoggedIn="isLoggedIn" />
+      <router-view />
     </v-main>
   </v-app>
 </template>
@@ -22,6 +22,9 @@ export default {
   },
 
   data: () => ({
+    title: "Sahachai Plangrit",
+    email: "63050197@kmitl.ac.th",
+    isLoggedIn: false,
     // import voraphat from '@/components/Voraphat.vue'
   }),
 

@@ -3,69 +3,84 @@
     <div class="text-h6 mb-1">
       กรุณากรอกข้อมูล
     </div>
-    <v-select
-    v-model="building"
-    label="เลือกอาคาร"
-    :items="building_item"
-    item-title="name"
-    item-value="id"
-    persistence-hint
-    return-object>
+    <v-select v-model="building" label="เลือกอาคาร" :items="building_item" item-title="name" item-value="id"
+      persistence-hint return-object>
     </v-select>
 
-    <v-select
-    v-model="room"
-    :label="isLabelChange"
-    :disabled="isDisableRoomSelect"
-    :items="classroom_items"
-    item-title="name"
-    item-value="id"
-    return-object>
+    <v-select v-model="room" :label="isLabelChange" :disabled="isDisableRoomSelect" :items="classroom_items"
+      item-title="name" item-value="id" return-object>
     </v-select>
 
-    <Datepicker
-    v-model="date"
-    :enable-time-picker="false"
-    placeholder="กรุณาเลือกวันที่"
-    fixed-start
-    :clearable="false"
-    :min-date=this.date />
+    <Datepicker v-model="date" :enable-time-picker="false" placeholder="กรุณาเลือกวันที่" fixed-start :clearable="false"
+      :min-date=this.date />
 
     <v-row class="mt-2">
       <v-col>
-        <Datepicker
-        v-model="startTime"
-        time-picker
-        minutes-increment="30"
-        minutes-grid-increment="30"
-        :clearable="false"
-        :start-time="{ hours: 8, minutes: 30 }"
-        placeholder="กรุณาเลือกเวลาเริ่มต้น" />
+        <Datepicker v-model="startTime" time-picker minutes-increment="30" minutes-grid-increment="30"
+          :clearable="false" :start-time="{ hours: 8, minutes: 30 }" placeholder="กรุณาเลือกเวลาเริ่มต้น" />
       </v-col>
 
       <v-col>
-        <Datepicker
-        v-model="endTime"
-        time-picker
-        minutes-increment="30"
-        minutes-grid-increment="30"
-        :clearable="false"
-        :start-time="{ hours: 8, minutes: 30 }"
-        placeholder="กรุณาเลือกเวลาสื้นสุด" 
-        :min-time="startTime"/>
+        <Datepicker v-model="endTime" time-picker minutes-increment="30" minutes-grid-increment="30" :clearable="false"
+          :start-time="{ hours: 8, minutes: 30 }" placeholder="กรุณาเลือกเวลาสื้นสุด" :min-time="startTime" />
       </v-col>
     </v-row>
 
-    <v-card class="mt-5 pa-1" :color="roomStatusColor">
+    <v-card class="mt-5" :color="roomStatusColor">
       <div class="text-center">
         {{ roomStatus }}
       </div>
     </v-card>
-    <div class="d-flex justify-end">
-      <v-btn color="success" class="mt-4" @click="validate" :disabled="true">
-        <h2> จองห้อง </h2>
+
+
+
+    <v-btn color="green" class="d-flex mt-4" block @click="confirmDialog = true" :disabled="!status">
+      <h2> จองห้อง </h2>
+    </v-btn>
+    <v-dialog v-model="confirmDialog">
+      <v-card class="ma-15">
+        <v-card-text class="d-flex align-center justify-center my-2">
+          ยืนยันการบันทึกหรือไม่
+        </v-card-text>
+        <v-card-actions>
+          <v-row class="mb-5 mx-2">
+            <v-col>
+              <v-btn class=" bg-green" color="white" block
+                @click="confirmDialog = true, successDialog = true, validate">
+                ยืนยัน
+              </v-btn>
+              <v-dialog v-model="successDialog">
+                <v-card class="d-flex align-center justify-center my-2 pa-5">
+                  <div class="text-center" v-if="isReservationSuccess">
+                    <h2 class="text-green"> สำเร็จ </h2>
+                    สามารถตรวจสอบสถานะการจองห้องได้ที่หน้า ประวัติการจอง
+                  </div>
+                  <div class="text-center" v-else>
+                    <h2 class="text-red"> ล้มเหลว </h2>
+                    เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งในภายหลัง
+                  </div>
+                  <v-btn color="red" class="mt-5 bg-white" @click="confirmDialog = true, successDialog = false">
+                    <h5> ปิด </h5>
+                  </v-btn>
+                </v-card>
+              </v-dialog>
+            </v-col>
+            <v-col>
+              <v-btn class="bg-red" color="white" block @click="confirmDialog = false">
+                ยกเลิก
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <div class="ma-16 pa-5">
+      <v-btn class="ma-5" color="red" @click="testDisplayStatus(false)">
+        เสกให้ห้องว่าง
       </v-btn>
     </div>
+
 
     <div>
       <v-overlay v-model="loading" class="align-center justify-center">
@@ -85,6 +100,8 @@
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import axios from 'axios';
+import { useClassroomStore } from '@/stores/classrooms'
+import { useBuildingStore } from '@/stores/buildings'
 
 import { defineComponent } from 'vue';
 
@@ -105,8 +122,14 @@ export default defineComponent({
     endTime: null,
     loading: true,
 
+    status: null,
     roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง
     roomStatusColor: "grey", //เขียว | แดง
+
+    isReservationSuccess: null,
+
+    confirmDialog: false,
+    successDialog: false,
 
     building_item: [],
     classroom_items: []
@@ -144,10 +167,9 @@ export default defineComponent({
         this.loading = true
 
         // fetch classroom options
-        $axios.get("buildings/" + newVal.id + "/classrooms").then(res => {
-          this.classroom_items = res.data
+        this.classroomStore.fetchClassroomInBuilding(newVal.id).then(res => {
+          this.classroom_items = res
           this.loading = false
-          console.log(this.classroom_items)
         }).catch(err => {
           console.error("Cannot fetch classrooms data: " + err.message)
           this.loading = false
@@ -173,13 +195,16 @@ export default defineComponent({
   },
 
   methods: {
-    setDisplayStatus(status) {
-      if(status) {
-        roomStatus = "ว่าง"
-        roomStatusColor = "green"
+    testDisplayStatus() {
+      this.status = !this.status
+      if (this.status) {
+        this.status = true
+        this.roomStatus = "ว่าง"
+        this.roomStatusColor = "green"
       } else {
-        roomStatus = "ไม่ว่าง"
-        roomStatusColor = "red"
+        this.status = false
+        this.roomStatus = "ไม่ว่าง"
+        this.roomStatusColor = "red"
       }
     },
 
@@ -192,7 +217,7 @@ export default defineComponent({
       startDatetime.setMinutes(this.startTime.minutes)
       startDatetime.setSeconds(this.startTime.seconds)
 
-      return startDatetime.toISOString().split("Z")[0]
+      return startDatetime.toISOString()
 
 
       // return this.date.getFullYear() + "-" + this.date.getMonth() + "-" + this.date.getDate() + "T"
@@ -208,17 +233,12 @@ export default defineComponent({
       finishDatetime.setMinutes(this.endTime.minutes)
       finishDatetime.setSeconds(this.endTime.seconds)
 
-      return finishDatetime.toISOString().split("Z")[0]
+      return finishDatetime.toISOString()
       //return (this.date.getFullYear() + "-" + (this.date.getMonth() + 1) + "-" + this.date.getDate() + "T" + this.endTime.toLocaleTimeString()).toString()
     },
 
     // check if selected room & time range is available in the current time
     validateRoomAvailability() {
-
-      console.log(this.room)
-      console.log(this.date)
-      console.log(this.startTime)
-      console.log(this.endTime)
 
       // validate when all inputs are filled in
       if (this.room && this.date && this.startTime && this.endTime) {
@@ -229,22 +249,16 @@ export default defineComponent({
         this.loading = true
 
         // fetch classroom options
-        $axios.get("classrooms/" + this.room.id + "/availability", {
-          params: {
-            startTime: this.getStartDate(),
-            finishTime: this.getEndDate()
-          }
-        }).then(res => {
-
-          if (res.data.available) {
+        this.classroomStore.checkIsRoomAvailable(this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
+          if (res) {
+            this.status = true
             this.roomStatus = "ว่าง"
             this.roomStatusColor = "green"
           } else {
+            this.status = false
             this.roomStatus = "ไม่ว่าง"
             this.roomStatusColor = "red"
           }
-
-
           this.loading = false
         }).catch(err => {
           console.error("Cannot check classroom availability: " + err.message)
@@ -263,12 +277,20 @@ export default defineComponent({
     this.date.setDate(this.date.getDate() + 1)
   },
 
+  setup() {
+    const buildingStore = useBuildingStore()
+    const classroomStore = useClassroomStore()
+    return {
+        buildingStore,
+        classroomStore
+    }
+  },
+
   mounted() {
     this.loading = true
-    $axios.get("buildings").then(res => {
-      this.building_item = res.data
+    this.buildingStore.fetchAll().then(res => {
+      this.building_item = res
       this.loading = false
-      console.log(this.building_item)
     }).catch(err => {
       console.error("Cannot fetch building data: " + err.message)
       this.loading = false

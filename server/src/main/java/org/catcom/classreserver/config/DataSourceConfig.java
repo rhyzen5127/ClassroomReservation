@@ -14,9 +14,9 @@ public class DataSourceConfig {
     {
         var builder = DataSourceBuilder.create();
         builder.driverClassName(com.mysql.cj.jdbc.Driver.class.getName());
-        builder.url("jdbc:mysql://localhost:3306/classreserver");
-        builder.username("root");
-        builder.password("493463");
+        builder.url("jdbc:mysql://remotemysql.com/selaYvh08m");
+        builder.username("selaYvh08m");
+        builder.password("1JTuietqDz");
         return builder.build();
     }
 }

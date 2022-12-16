@@ -1,7 +1,8 @@
 <template>
   <div>
     <v-navigation-drawer permanent>
-      <SideBarAccount />
+      <SideBarAccount :title="this.title" :email="this.email" :isLoggedIn="this.isLoggedIn"/>
+      
 
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
@@ -18,6 +19,24 @@
 import SideBarAccount from './icons/SideBarAccount.vue'
 
 export default {
+  props: {
+    title: {
+      type: String,
+      require: true,
+      default: "",
+    },
+    email: {
+      type: String,
+      require: true,
+      default: "",
+    },
+    isLoggedIn: {
+      type: Boolean,
+      require: true,
+      default: false,
+    }
+  },
+  
   // Components
   components: {
     SideBarAccount,

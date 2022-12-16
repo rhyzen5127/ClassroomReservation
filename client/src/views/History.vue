@@ -6,7 +6,7 @@
         <div class="text-h6 mb-1">
           เร็ว ๆ นี้
         </div>
-        <div v-for="i in 10" :key="i + '-classCard'" class="my-4">
+        <div v-for="i in nReservation" :key="i + '-classCard'" class="my-4">
           <ClassroomCard></ClassroomCard>
         </div>
       </v-col>
@@ -27,6 +27,10 @@ import { defineComponent } from 'vue';
 // Components
 
 export default defineComponent({
+  data: () => ({
+    nReservation: 1,
+  }),
+
   name: 'History',
 
   components: {
