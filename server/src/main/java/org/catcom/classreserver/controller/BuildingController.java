@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RestController
 public class BuildingController
 {
@@ -17,7 +19,7 @@ public class BuildingController
     private BuildingRepos buildingRepos;
 
     @GetMapping("/buildings")
-    @ResponseBody Iterable<Building> getAllBuilding()
+    @ResponseBody List<Building> getAllBuilding()
     {
         return buildingRepos.findAll();
     }
