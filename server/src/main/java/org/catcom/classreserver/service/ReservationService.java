@@ -30,9 +30,6 @@ public class ReservationService
     private Logger log = LoggerFactory.getLogger(ReservationService.class);
 
     @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
     private ReservationRepos reservationRepos;
 
     @Autowired
