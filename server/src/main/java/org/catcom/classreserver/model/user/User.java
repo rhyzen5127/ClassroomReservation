@@ -24,6 +24,7 @@ public class User
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     @Getter @Setter
     private String password;
 
