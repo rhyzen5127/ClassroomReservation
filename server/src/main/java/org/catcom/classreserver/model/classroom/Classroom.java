@@ -36,10 +36,10 @@ public class Classroom
     @Getter @Setter
     private Integer width;
 
-    // height in meter unit (m)
+    // length in meter unit (m)
     @Column
     @Getter @Setter
-    private Integer height;
+    private Integer length;
 
     @Column
     @Getter @Setter
