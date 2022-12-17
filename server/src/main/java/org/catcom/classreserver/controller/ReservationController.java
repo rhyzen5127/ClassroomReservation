@@ -5,7 +5,7 @@ import org.catcom.classreserver.exceptions.ReservationException;
 import org.catcom.classreserver.form.EditReservationForm;
 import org.catcom.classreserver.form.ReserveForm;
 import org.catcom.classreserver.model.reservation.Reservation;
-import org.catcom.classreserver.model.user.UserDetailService;
+import org.catcom.classreserver.service.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
 import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.service.ReservationService;
@@ -14,11 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -196,7 +194,7 @@ public class ReservationController
             var newReservedRoom = classroomService.findRoom(form.getRoomId());
 
             var newStartTime = form.getStartTime() == null ? null : form.getStartTime().toLocalDateTime();
-            var newFininshTime = form.getFinishTime() == null ? null : form.getStartTime().toLocalDateTime();
+            var newFininshTime = form.getFinishTime() == null ? null : form.getFinishTime().toLocalDateTime();
 
             reservationService.updateReservation(
                     id,
