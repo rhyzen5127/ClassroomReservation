@@ -2,10 +2,12 @@ package org.catcom.classreserver.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.catcom.classreserver.exceptions.reservations.ReservationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestValueException;
@@ -29,9 +31,10 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public @ResponseBody Map<String, Object> handleMismatchArgumentType(HttpServletRequest req, MethodArgumentTypeMismatchException ex)
+    public @ResponseBody Map<String, Object> handleMismatchArgumentType(MethodArgumentTypeMismatchException ex, HttpServletResponse res)
     {
 
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
         var paramName = ex.getParameter().getParameterName();
         if (paramName == null) paramName = "null";
 
@@ -50,8 +53,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public @ResponseBody Map<String, Object> handleMissingParameterException(HttpServletRequest req, MissingServletRequestParameterException ex)
+    public @ResponseBody Map<String, Object> handleMissingParameterException(MissingServletRequestParameterException ex, HttpServletResponse res)
     {
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
         var reason = "Missing argument {" + ex.getParameterName() + "} of type [" + ex.getParameterType() + "]";
 
         return Map.of(
@@ -62,10 +66,28 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public @ResponseBody Map<String, Object> handleGenericResponseException(HttpServletRequest req, ResponseStatusException ex)
+    public @ResponseBody Map<String, Object> handleGenericResponseException(ResponseStatusException ex, HttpServletResponse res)
     {
+        res.setStatus(ex.getStatusCode().value());
         var reason = ex.getReason() == null ? "null" : ex.getReason();
         return Map.of("reason", reason);
+    }
+
+    @ExceptionHandler(ReservationException.class)
+    public @ResponseBody Map<String, Object> handleReservationException(ReservationException ex, HttpServletResponse res)
+    {
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        var reason = ex.getMessage() == null ? "null" : ex.getMessage();
+        return Map.of("reason", reason);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public @ResponseBody Map<String, Object> handleUnreadableRequest(HttpMessageNotReadableException ex, HttpServletResponse res)
+    {
+        res.setStatus(HttpStatus.BAD_REQUEST.value());
+        return Map.of(
+                "reason", ex.getMessage()
+        );
     }
 
 }

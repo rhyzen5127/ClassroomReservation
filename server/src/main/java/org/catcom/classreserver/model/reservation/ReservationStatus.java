@@ -18,6 +18,7 @@ public class ReservationStatus
 
     public static boolean isValid(String status)
     {
+        if (status == null) return false;
         return ALL.contains(status);
     }
 

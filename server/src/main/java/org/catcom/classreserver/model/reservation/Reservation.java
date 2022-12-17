@@ -14,7 +14,8 @@ import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
 @Table(name = "reservations")
 public class Reservation {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     @Getter @Setter
     private Integer id;
 
@@ -28,19 +29,19 @@ public class Reservation {
     @Getter @Setter
     private Classroom room;
 
-    @Column(nullable = false)
+    @Column(name = "booking_time", nullable = false)
     @Getter @Setter
     private LocalDateTime bookingTime; // time when user make a reservation
 
-    @Column(nullable = false)
+    @Column(name = "start_time", nullable = false)
     @Getter @Setter
     private LocalDateTime startTime; // time to start using room
 
-    @Column(nullable = false)
+    @Column(name = "finish_time", nullable = false)
     @Getter @Setter
     private LocalDateTime finishTime; // time to finish using room
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Getter @Setter
     private String status; // ( pending | approved | rejected | canceled )
 

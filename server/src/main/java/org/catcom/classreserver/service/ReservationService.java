@@ -1,27 +1,26 @@
 package org.catcom.classreserver.service;
 
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import lombok.NonNull;
-import org.catcom.classreserver.exceptions.ReservationException;
+import org.catcom.classreserver.exceptions.reservations.InvalidReservationStateException;
+import org.catcom.classreserver.exceptions.reservations.ReservationException;
+import org.catcom.classreserver.exceptions.reservations.ReservationNotFoundException;
+import org.catcom.classreserver.exceptions.reservations.ReservationScheduleOverlapException;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.reservation.Reservation;
 import org.catcom.classreserver.model.reservation.ReservationRepos;
+import org.catcom.classreserver.model.reservation.ReservationStatus;
 import org.catcom.classreserver.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.util.Pair;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
 
@@ -38,8 +37,8 @@ public class ReservationService
     private ClassroomService classroomService;
 
     public void reserve(
-            User reserver,
-            Classroom room,
+            @NonNull User reserver,
+            @NonNull Classroom room,
             @NonNull LocalDateTime bookingTime,
             @NonNull LocalDateTime startTime,
             @NonNull LocalDateTime finishTime
@@ -49,34 +48,44 @@ public class ReservationService
         validateReservedRoom(room);
         validateRoomSchedule(room, startTime, finishTime);
 
-        var newReservation = new Reservation();
-        newReservation.setOwner(reserver);
-        newReservation.setRoom(room);
-        newReservation.setBookingTime(bookingTime);
-        newReservation.setStartTime(startTime);
-        newReservation.setFinishTime(finishTime);
-        newReservation.setPending();
+        var reservation = new Reservation();
+        reservation.setOwner(reserver);
+        reservation.setRoom(room);
+        reservation.setBookingTime(bookingTime);
+        reservation.setStartTime(startTime);
+        reservation.setFinishTime(finishTime);
+        reservation.setPending();
 
-        reservationRepos.save(newReservation);
+        // reservationRepos.save(reservation);
 
     }
 
+    /* Find by owner and status */
     public List<Reservation> findReservations(@Nullable User owner, @Nullable String status)
+    throws ReservationException
     {
         return findReservations(owner, null, status);
     }
 
+    /* Find by room and status */
     public List<Reservation> findReservations(@Nullable Classroom classroom, @Nullable String status)
+    throws ReservationException
     {
         return findReservations(null, classroom, status);
     }
 
+    /* Find by owner, room and status */
     public List<Reservation> findReservations(
         @Nullable User owner,
         @Nullable Classroom classroom,
         @Nullable String status
-    )
+    ) throws ReservationException
     {
+
+        if (status != null && !ReservationStatus.isValid(status))
+        {
+            throw new ReservationException("Unknown reservation status: " + status);
+        }
 
         var specs = new ArrayList<Specification<Reservation>>();
 
@@ -102,12 +111,12 @@ public class ReservationService
     }
 
 
-    public Reservation getReservation(int id) throws ReservationException
+    public Reservation getReservation(int id) throws ReservationNotFoundException
     {
         var reservation = reservationRepos.findById(id);
         if (reservation.isEmpty())
         {
-            throw new ReservationException("The requested reservation does not exist");
+            throw new ReservationNotFoundException("The requested reservation does not exist");
         }
 
         return reservation.get();
@@ -119,7 +128,8 @@ public class ReservationService
             @Nullable LocalDateTime newStartTime,
             @Nullable LocalDateTime newFinishTime,
             @Nullable String newStatus
-    ) throws ReservationException {
+    ) throws ReservationException
+    {
 
         var reservation = getReservation(id);
 
@@ -144,16 +154,21 @@ public class ReservationService
             requireScheduleValidated = true;
         }
 
+        if (newStatus != null)
+        {
+            if (APPROVED.equalsIgnoreCase(newStatus))
+            {
+                requireScheduleValidated = true;
+            }
+            validateStatus(reservation, newStatus);
+            reservation.setStatus(newStatus);
+        }
+
         if (requireScheduleValidated)
         {
             validateRoomSchedule(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime());
         }
 
-        if (newStatus != null)
-        {
-            validateStatus(reservation, newStatus);
-            reservation.setStatus(newStatus);
-        }
 
         reservationRepos.save(reservation);
 
@@ -187,7 +202,7 @@ public class ReservationService
     {
         if (room == null)
         {
-            throw new ReservationException("The requested room does not exist");
+            throw new IllegalArgumentException("The requested room does not exist");
         }
 
         if (!room.isReady())
@@ -201,10 +216,10 @@ public class ReservationService
             @NonNull Classroom classroom,
             @NonNull LocalDateTime startTime,
             @NonNull LocalDateTime finishTime
-    ) throws ReservationException
+    ) throws ReservationScheduleOverlapException
     {
         if (!isRoomAvailableAtGivenSchedule(classroom, startTime, finishTime)) {
-            throw new ReservationException("The requested room is not available for the given time");
+            throw new ReservationScheduleOverlapException("The requested room is not available for the given time");
         }
     }
 
@@ -213,19 +228,21 @@ public class ReservationService
             @NonNull String newStatus
     ) throws ReservationException
     {
-
         switch (newStatus)
         {
-            case PENDING -> {}
+            case PENDING -> {
+                if (reservation.isPending()) return;
+                throw new InvalidReservationStateException("Cannot set reservation status to pending again");
+            }
             case CANCELED ->
             {
                 if (reservation.isApproved() || reservation.isPending()) return;
-                throw new ReservationException("Only accepted and pending reservation can be canceled");
+                throw new InvalidReservationStateException("Only accepted and pending reservation can be canceled");
             }
             case APPROVED, REJECTED ->
             {
                 if (reservation.isPending()) return;
-                throw new ReservationException("Only pending reservation can be either accepted or rejected");
+                throw new InvalidReservationStateException("Only pending reservation can be either accepted or rejected");
             }
             default -> throw new ReservationException("Unknown reservation status: " + newStatus);
         }

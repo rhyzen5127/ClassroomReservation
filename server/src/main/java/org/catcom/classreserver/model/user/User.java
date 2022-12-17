@@ -16,31 +16,32 @@ public class User
 {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     @Getter @Setter
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     @Getter @Setter
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     @JsonIgnore
     @Getter @Setter
     private String password;
 
-    @Column(nullable = false)
+    @Column(name = "first_name", nullable = false)
     @Getter @Setter
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "last_name", nullable = false)
     @Getter @Setter
     private String lastName;
 
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     @Getter @Setter
     private String role;
 
-    @Column(nullable = false)
+    @Column(name = "enabled", nullable = false)
     @Getter @Setter
     private Boolean enabled;
 

@@ -1,10 +1,11 @@
 package org.catcom.classreserver.controller;
 
 import org.catcom.classreserver.exceptions.ClassroomException;
-import org.catcom.classreserver.exceptions.ReservationException;
+import org.catcom.classreserver.exceptions.reservations.ReservationException;
 import org.catcom.classreserver.form.EditReservationForm;
 import org.catcom.classreserver.form.ReserveForm;
 import org.catcom.classreserver.model.reservation.Reservation;
+import org.catcom.classreserver.model.user.User;
 import org.catcom.classreserver.service.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
 import org.catcom.classreserver.service.ClassroomService;
@@ -12,6 +13,7 @@ import org.catcom.classreserver.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -87,14 +89,21 @@ public class ReservationController
     {
         var requestingUserDetail = userDetailService.loadByAuthentication(auth);
 
-        if (!requestingUserDetail.isStaff() && requestingUserDetail.getId() != userId)
+        try
         {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staffs can get reservations of other user directly");
+            var user = userDetailService.loadUserById(userId).getUser();
+
+            if (!requestingUserDetail.isStaff() && requestingUserDetail.getId() != userId)
+            {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staffs can get reservations of other user directly");
+            }
+
+            return reservationService.findReservations(user, status);
         }
-
-        var user = userDetailService.loadUserById(userId).getUser();
-
-        return reservationService.findReservations(user, status);
+        catch (UsernameNotFoundException ex)
+        {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        }
 
     }
 
@@ -191,7 +200,7 @@ public class ReservationController
 
             }
 
-            var newReservedRoom = classroomService.findRoom(form.getRoomId());
+            var newReservedRoom = form.getRoomId() == null ? null : classroomService.findRoom(form.getRoomId());
 
             var newStartTime = form.getStartTime() == null ? null : form.getStartTime().toLocalDateTime();
             var newFininshTime = form.getFinishTime() == null ? null : form.getFinishTime().toLocalDateTime();

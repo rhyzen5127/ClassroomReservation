@@ -42,6 +42,8 @@ public class UserDetailService implements UserDetailsService
     public UserDetail loadByAuthentication(Authentication auth)
     {
 
+        if (auth == null) return null;
+
         var principal = auth.getPrincipal();
 
         if (principal instanceof Jwt jwt)

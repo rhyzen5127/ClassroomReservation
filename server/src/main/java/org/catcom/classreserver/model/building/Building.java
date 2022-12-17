@@ -14,15 +14,16 @@ import java.util.List;
 @Table(name = "buildings")
 public class Building {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     @Getter @Setter
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     @Getter @Setter
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "levels", nullable = false)
     @Getter @Setter
     private Integer levels;
 

@@ -15,33 +15,34 @@ import java.util.List;
 @Table(name = "classrooms")
 public class Classroom
 {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     @Getter @Setter
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     @Getter @Setter
     private String name;
 
-    @Column
+    @Column(name = "level")
     @Getter @Setter
     private String level;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Getter @Setter
     private String status;
 
     // width in meter unit (m)
-    @Column
+    @Column(name = "width")
     @Getter @Setter
     private Integer width;
 
     // length in meter unit (m)
-    @Column
+    @Column(name = "length")
     @Getter @Setter
     private Integer length;
 
-    @Column
+    @Column(name = "seats")
     @Getter @Setter
     private Integer seats;
 
