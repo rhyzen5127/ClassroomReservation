@@ -8,6 +8,8 @@ import org.catcom.classreserver.model.user.User;
 
 import java.time.LocalDateTime;
 
+import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
+
 @Entity
 @Table(name = "reservations")
 public class Reservation {
@@ -44,37 +46,42 @@ public class Reservation {
 
     public boolean isPending()
     {
-        return "pending".equalsIgnoreCase(status);
+        return PENDING.equalsIgnoreCase(status);
     }
 
     public boolean isApproved()
     {
-        return "approved".equalsIgnoreCase(status);
+        return APPROVED.equalsIgnoreCase(status);
     }
 
     public boolean isRejected()
     {
-        return "rejected".equalsIgnoreCase(status);
+        return REJECTED.equalsIgnoreCase(status);
     }
 
     public boolean isCanceled()
     {
-        return "canceled".equalsIgnoreCase(status);
+        return CANCELED.equalsIgnoreCase(status);
+    }
+
+    public void setPending()
+    {
+        setStatus(PENDING);
     }
 
     public void setApproved()
     {
-        setStatus("approved");
+        setStatus(APPROVED);
     }
 
     public void setRejected()
     {
-        setStatus("rejected");
+        setStatus(REJECTED);
     }
 
     public void setCanceled()
     {
-        setStatus("canceled");
+        setStatus(CANCELED);
     }
 
 }

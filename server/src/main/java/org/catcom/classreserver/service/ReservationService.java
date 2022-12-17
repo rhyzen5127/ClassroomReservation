@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
+
 @Service
 public class ReservationService
 {
@@ -53,7 +55,7 @@ public class ReservationService
         newReservation.setBookingTime(bookingTime);
         newReservation.setStartTime(startTime);
         newReservation.setFinishTime(finishTime);
-        newReservation.setStatus("pending");
+        newReservation.setPending();
 
         reservationRepos.save(newReservation);
 
@@ -160,7 +162,7 @@ public class ReservationService
 
     public boolean isRoomAvailableAtGivenSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        var reservations = findReservations(classroom, "approved");
+        var reservations = findReservations(classroom, APPROVED);
 
         for (var reservation : reservations)
         {
@@ -214,18 +216,18 @@ public class ReservationService
 
         switch (newStatus)
         {
-            case "pending": return;
-
-            case "canceled":
+            case PENDING -> {}
+            case CANCELED ->
+            {
                 if (reservation.isApproved() || reservation.isPending()) return;
                 throw new ReservationException("Only accepted and pending reservation can be canceled");
-
-            case "accepted", "rejected":
+            }
+            case APPROVED, REJECTED ->
+            {
                 if (reservation.isPending()) return;
                 throw new ReservationException("Only pending reservation can be either accepted or rejected");
-
-            default:
-                throw new ReservationException("Unknown reservation status: " + newStatus);
+            }
+            default -> throw new ReservationException("Unknown reservation status: " + newStatus);
         }
 
     }
