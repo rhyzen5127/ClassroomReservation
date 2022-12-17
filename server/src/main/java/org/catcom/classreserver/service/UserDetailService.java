@@ -1,5 +1,7 @@
-package org.catcom.classreserver.model.user;
+package org.catcom.classreserver.service;
 
+import org.catcom.classreserver.model.user.UserDetail;
+import org.catcom.classreserver.model.user.UserRepos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;

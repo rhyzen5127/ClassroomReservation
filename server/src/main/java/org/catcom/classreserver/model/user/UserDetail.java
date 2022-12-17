@@ -13,7 +13,7 @@ public class UserDetail implements UserDetails
     @Getter
     private final User user;
 
-    UserDetail(User user)
+    public UserDetail(User user)
     {
         this.user = user;
     }
