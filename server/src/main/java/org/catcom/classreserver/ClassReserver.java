@@ -1,28 +1,19 @@
 package org.catcom.classreserver;
 
-import org.catcom.classreserver.exceptions.ClassroomException;
-import org.catcom.classreserver.exceptions.ReservationException;
-import org.catcom.classreserver.form.EditClassroomForm;
-import org.catcom.classreserver.form.EditReservationForm;
-import org.catcom.classreserver.form.ReserveForm;
-import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.model.reservation.*;
 import org.catcom.classreserver.model.user.*;
 import org.catcom.classreserver.service.JwtTokenService;
 import org.catcom.classreserver.service.ReservationService;
+import org.catcom.classreserver.service.UserDetailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 

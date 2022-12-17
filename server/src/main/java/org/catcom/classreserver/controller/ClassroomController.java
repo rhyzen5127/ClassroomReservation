@@ -4,7 +4,7 @@ import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.form.EditClassroomForm;
 import org.catcom.classreserver.model.building.BuildingRepos;
 import org.catcom.classreserver.model.classroom.Classroom;
-import org.catcom.classreserver.model.user.UserDetailService;
+import org.catcom.classreserver.service.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
 import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.service.ReservationService;
@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.time.LocalDateTime;
 
 @RestController
 public class ClassroomController
