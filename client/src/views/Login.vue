@@ -13,6 +13,15 @@
                 Login
             </v-btn>
 
+            <v-btn color="primary" class="mr-4" @click="loginAsStaffTest()">
+                Login as STAFF
+            </v-btn>
+
+            <v-btn color="secondary" class="mr-4" @click="loginAsUserTest()">
+                Login as USER
+            </v-btn>
+
+
             <div>
                 <v-overlay v-model="loading" class="align-center justify-center">
                     <v-progress-circular size="70" color="orange" indeterminate>
@@ -65,6 +74,18 @@ export default {
     }),
 
     methods: {
+        loginAsStaffTest(){
+            this.email = 'admin'
+            this.password = 'voraphat'
+            this.loginHandler()
+        },
+
+        loginAsUserTest(){
+            this.email = 'user@gmail.com'
+            this.password = 'voraphat'
+            this.loginHandler()
+        },
+
         async validate() {
             const { valid } = await this.$refs.form.validate()
 
@@ -81,25 +102,14 @@ export default {
         },
         loginHandler() {
             this.loading = true
-
-            let loginData = new FormData()
-            loginData.append("username", this.email)
-            loginData.append("password", this.password)
-
-
             this.userStore.login(this.email, this.password).then((res) => {
                 console.log("RES::: ", res);
-                if (res) {
-                    localStorage.setItem("cookie", res.token);
-                    localStorage.setItem("email", res.user.email);
-                    localStorage.setItem("fname", res.user.firstName);
-                    localStorage.setItem("lname", res.user.lastName);
-                    localStorage.setItem("role", res.user.role);
-                    this.loading = false
-                    window.location.href = '/'
-                }
+                localStorage.setItem("cookie", res)
                 // REDIRECT to HOME
+                
+                window.location.href = '/'
             }).catch(err => {
+                localStorage.setItem("cookie", null)
                 this.loading = false
                 this.authFailDialog = true
             })

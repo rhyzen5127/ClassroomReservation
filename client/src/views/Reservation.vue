@@ -11,8 +11,8 @@
       item-title="name" item-value="id" return-object>
     </v-select>
 
-    <Datepicker v-model="date" :enable-time-picker="false" placeholder="กรุณาเลือกวันที่" fixed-start :clearable="false"
-      :min-date=this.date />
+    <Datepicker v-model="pickDate" :enable-time-picker="false" placeholder="กรุณาเลือกวันที่" fixed-start
+      :clearable="false" :min-date="minSelectDate" />
 
     <v-row class="mt-2">
       <v-col>
@@ -34,10 +34,11 @@
 
 
 
-    <v-btn color="green" class="d-flex mt-4" block @click="confirmDialog = true" :disabled="!status || !isLoggedIn">
+    <v-btn v-if="isLoggedIn" color="green" class="d-flex mt-4" block @click="confirmDialog = true"
+      :disabled="!status || !isLoggedIn || !ready">
       <h2> จองห้อง </h2>
     </v-btn>
-    
+
     <v-dialog v-model="confirmDialog">
       <v-card class="ma-15">
         <v-card-text class="d-flex align-center justify-center my-2">
@@ -76,11 +77,11 @@
       </v-card>
     </v-dialog>
 
-    <div class="ma-16 pa-5">
+    <!-- <div class="ma-16 pa-5">
       <v-btn class="ma-5" color="red" @click="testDisplayStatus(false)">
         เสกให้ห้องว่าง
       </v-btn>
-    </div>
+    </div> -->
 
 
     <div>
@@ -106,6 +107,7 @@ import { useBuildingStore } from '@/stores/buildings'
 import { useReservationStore } from '@/stores/reservations'
 
 import { defineComponent } from 'vue';
+import { isThursday } from 'date-fns';
 
 export default defineComponent({
   name: 'Reservation',
@@ -122,13 +124,16 @@ export default defineComponent({
     isLoggedIn: false,
 
     status: null,
-    roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง
+    roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง | ไม่พร้อมใช้งาน
     roomStatusColor: "grey", //เขียว | แดง
+
+    pickDate: new Date(),
 
     isReservationSuccess: null,
 
     confirmDialog: false,
     successDialog: false,
+    reservationErrMsg: "",
 
     building_item: [],
     classroom_items: []
@@ -144,6 +149,12 @@ export default defineComponent({
     // [Room select dropdown] Label
     isLabelChange() {
       return this.building ? "กรุณาเลือกห้อง" : "กรุณาเลือกห้อง (กรุณาเลือกอาคารก่อน)";
+    },
+
+    minSelectDate() {
+      var pickDate = new Date(this.date.toISOString())
+      pickDate.setDate(pickDate.getDate() + 3)
+      return pickDate
     }
   },
 
@@ -179,6 +190,18 @@ export default defineComponent({
       }
     },
 
+    room(newVal) {
+      if (!newVal) return
+      this.loading = true
+      if (this.room.status != "ready") {
+        this.status = true
+        this.roomStatus = "ห้องไม่พร้อมใช้งาน"
+        this.roomStatusColor = "red"
+        this.loading = false
+        return
+      }
+    },
+
     startTime(newVal) {
       if (newVal) {
         this.validateRoomAvailability()
@@ -196,12 +219,19 @@ export default defineComponent({
   methods: {
     testDisplayStatus() {
       this.status = !this.status
-      if (this.status) {
+      if (this.status && this.isReady) {
         this.status = true
+        this.isReady = true
         this.roomStatus = "ว่าง"
         this.roomStatusColor = "green"
+      } else if (!this.status && this.isReady) {
+        this.status = false
+        this.isReady = true
+        this.roomStatus = "ไม่ว่าง"
+        this.roomStatusColor = "red"
       } else {
         this.status = false
+        this.isReady = false
         this.roomStatus = "ไม่ว่าง"
         this.roomStatusColor = "red"
       }
@@ -245,7 +275,13 @@ export default defineComponent({
         this.roomStatusColor = "grey"
 
         this.loading = true
-
+        if (this.room.status != "ready") {
+          this.status = true
+          this.roomStatus = "ห้องไม่พร้อมใช้งาน"
+          this.roomStatusColor = "red"
+          this.loading = false
+          return
+        }
         // fetch classroom options
         this.classroomStore.checkIsRoomAvailable(this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
           if (res) {
@@ -270,7 +306,7 @@ export default defineComponent({
     addReservation() {
       console.log("addReservation")
       this.loading = true
-      this.reservationStore.reserve(localStorage.cookie, this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
+      this.reservationStore.reserve(localStorage.getItem('cookie'), this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
         this.isReservationSuccess = true
         this.loading = false
       }).catch((err) => {
@@ -282,10 +318,6 @@ export default defineComponent({
   },
 
   components: {
-  },
-
-  beforeMount() {
-    this.date.setDate(this.date.getDate() + 1)
   },
 
   setup() {
@@ -311,7 +343,7 @@ export default defineComponent({
       this.loading = false
     })
 
-    
+
   }
 });
 </script>
