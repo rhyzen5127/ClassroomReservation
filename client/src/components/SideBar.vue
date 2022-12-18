@@ -1,13 +1,15 @@
 <template>
   <div>
     <v-navigation-drawer permanent>
-      <SideBarAccount :title="this.title" :email="this.email" :isLoggedIn="this.isLoggedIn" />
+      <SideBarAccount :title="this.title" :email="this.email" :isLoggedIn="this.isLoggedIn"/>
+      
 
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
           <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
             :to="item.to" v-if="isShowMenu(item.checkRole)" />
         </template>
+
       </v-list>
     </v-navigation-drawer>
   </div>
@@ -28,18 +30,13 @@ export default {
       require: true,
       default: "",
     },
-    role: {
-      type: String,
-      require: true,
-      default: "",
-    },
     isLoggedIn: {
       type: Boolean,
       require: true,
       default: false,
     }
   },
-
+  
   // Components
   components: {
     SideBarAccount,
@@ -47,13 +44,6 @@ export default {
 
   // Variables
   data: () => ({
-    icons: [
-      'mdi-facebook',
-      'mdi-twitter',
-      'mdi-linkedin',
-      'mdi-instagram',
-    ],
-
     nav_item: [
       {
         color: "orange",
@@ -99,11 +89,16 @@ export default {
   }),
   // Methods/Function
   methods: {
-    isShowMenu(acceptRole) {
+    isShowMenu(role) {
       // console.log('CONFIG.ROLE: ', role);
       // console.log('USER.ROLE: ', localStorage.getItem("role"));
-      return (acceptRole.includes(this.role + ""))
-    }
+      var currentRole = localStorage.getItem("role");
+      if (role.includes(currentRole+"")) {
+        return true;
+      } else {
+        return false;
+      }
+    }   
   },
 }
 </script>

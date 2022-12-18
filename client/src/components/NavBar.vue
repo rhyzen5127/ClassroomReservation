@@ -3,7 +3,6 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 </script>
 
 <template>
-  
   <div>
     <v-app-bar color="#ff7a00" prominent>
       <v-toolbar-title>

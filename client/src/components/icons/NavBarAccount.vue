@@ -42,6 +42,10 @@ export default {
   methods: {
     logout() {
       localStorage.removeItem("cookie");
+      localStorage.removeItem("fname");
+      localStorage.removeItem("lname");
+      localStorage.removeItem("email");
+      localStorage.removeItem("role");
       this.loading = false
       window.location.href = '/'
     },

@@ -7,6 +7,45 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 
+const id = ref(0)
+
+const props = defineProps({
+    width: Number
+})
+
+const options = reactive({
+    plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,dayGridWeek,listDay'
+    },
+    editable: true,
+    selectable: false,
+    weekends: true,
+    select: (arg) => {
+        id.value = id.value + 1
+
+        const cal = arg.view.calendar
+        cal.unselect()
+        cal.addEvent({
+            id: `${id.value}`,
+            title: `New event ${id.value}`,
+            start: arg.start,
+            end: arg.end,
+            allDay: true
+        })
+    },
+    eventClick: (arg) => {
+        if (arg.event) {
+            arg.event.remove()
+            id.value = id.value - 1
+        }
+    },
+    events: [],
+})
+
 </script>
 
 <template>
@@ -14,52 +53,3 @@ import interactionPlugin from '@fullcalendar/interaction'
         <FullCalendar v-bind:options="options" />
     </v-card>
 </template>
-
-<script>
-export default {
-    props: {
-        width: {
-            type: Number,
-            required: true
-        }
-    },
-
-    emits: [ 'dateSelected', 'eventSelected' ],
-
-    data: () => {
-        return {
-            options:  {
-                plugins: [ dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin ],
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    right: 'prev,next',
-                    center: 'title',
-                    // right: 'dayGridMonth,dayGridWeek,listDay'
-                    left: 'today'
-                },
-                editable: true,
-                selectable: true,
-                weekends: true,
-                events: [],
-            }
-        }
-    },
-
-    methods: {
-
-        onDateSelected(arg) {
-            this.$emit("dateSelected", arg.start, arg.end)
-        },
-
-        // eventClick(arg) {
-        //     alert("select eventClick")
-        // }
-
-    },
-
-    mounted() {
-        this.options.select = this.onDateSelected
-    }
-
-}
-</script>

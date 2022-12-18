@@ -4,14 +4,20 @@ import axios from '../plugins/axios'
 
 export const useUserStore = defineStore('users', () => {
 
+  const currentUser = ref({})
+  const currentUserId = computed(() => {
+    return currentUser.value.id
+  })
+
   function addBearerAuthHeader(headers, token) {
-    headers["Authorization"] = "Bearer " + token
+    headers["Authentication"] = "Bearer " + token
     return headers
   }
 
   async function fetchCurrentUser(token) {
     let headers = addBearerAuthHeader({}, token)
     let res = await axios.get("/users/current", { headers } )
+    currentUser.value = res.data
     return res.data
   }
 
@@ -20,9 +26,10 @@ export const useUserStore = defineStore('users', () => {
         "Content-Type": "multipart/form-data"
     }
     let res = await axios.post("/login", { username, password }, { headers } )
-    return res.data.token
+    currentUser.value = res.data
+    return res.data
 
   }
 
-  return { login, fetchCurrentUser, addBearerAuthHeader }
+  return { currentUser, currentUserId, login, fetchCurrentUser, addBearerAuthHeader }
 })

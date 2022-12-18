@@ -33,10 +33,10 @@ export const useClassroomStore = defineStore('classrooms', () => {
 		return res.data.available
 	}
 
-	async function updateClassroom(token, roomId, seats, isReady) {
+	async function updateClassroom(token, roomId, width, length, seats, isReady) {
 		let headers = userStore.addBearerAuthHeader({}, token)
 		let status = isReady === undefined ? undefined : isReady ? "ready" : "unready"
-		await axios.post('/classrooms/' + roomId, { seats, status }, { headers })
+		await axios.post('/classrooms/' + roomId, { width, length, seats, status }, { headers })
 	}
 
 	return { classrooms, fetchAll, fetchClassroomInBuilding, checkIsRoomAvailable, updateClassroom }

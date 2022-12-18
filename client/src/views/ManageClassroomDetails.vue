@@ -14,6 +14,10 @@
     <v-card v-if="room" class="pa-10">
       <h3 class="mb-5"> รายละเอียดห้อง {{ room ? room.name : " " }} อาคาร {{ building ? building.name : " " }}</h3>
 
+      <v-text-field v-model="width" clearable label="กว้าง (เมตร): "
+        prepend-icon="mdi-arrow-split-horizontal"></v-text-field>
+      <v-text-field v-model="length" clearable label="ยาว (เมตร): "
+        prepend-icon="mdi-arrow-split-vertical"></v-text-field>
       <v-text-field v-model="seats" clearable label="ที่นั่ง (ตัว): " prepend-icon="mdi-seat"></v-text-field>
       <v-switch prepend-icon="mdi-wrench" v-model="status" :label="status ? 'พร้อมใช้งาน' : 'ไม่พร้อมใช้งาน'"
         color="success" hide-details></v-switch>
@@ -70,6 +74,8 @@ export default defineComponent({
     building_item: [],
     classroom_items: [],
 
+    width: null,
+    length: null,
     seats: null,
     status: null,
   }),
@@ -127,15 +133,19 @@ export default defineComponent({
   methods: {
 
     resetInput() {
+      this.width = this.room != null ? this.room.width : "Error"
+      this.length = this.room != null ? this.room.length : "Error"
       this.seats = this.room != null ? this.room.seats : "Error"
       this.status = this.room != null ? this.room.ready : false
     },
 
     submitUpdateClassroom() {
+      let updatedWidth = this.room.width != this.width ? this.width : undefined
+      let updatedLength = this.room.length != this.length ? this.length : undefined
       let updatedSeats = this.room.seats != this.seats ? this.seats : undefined
       let updatedStatus = this.room.status != this.status ? this.status : undefined
       this.loading = true
-      this.classroomStore.updateClassroom(localStorage.cookie, this.room.id, updatedSeats, updatedStatus).then(() => {
+      this.classroomStore.updateClassroom(localStorage.cookie, this.room.id, updatedWidth, updatedLength, updatedSeats, updatedStatus).then(() => {
         this.editStatus = "แก้ไขสำเร็จ !"
         this.loading = false
       }).catch(err => {
