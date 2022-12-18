@@ -7,19 +7,25 @@
           เร็ว ๆ นี้
         </div>
         <v-card class="overflow-y-auto" max-height="650">
-        <div v-for="i in nReservation" :key="i + '-classCard'" class="my-4">
-          <v-card >
-            <ClassroomCard editable=true width="700"/>
-          </v-card>
-        </div>
-      </v-card>
+          <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
+            <v-card>
+              <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
+                :dateEnd="new Date(i.finishTime)" :size="[i.room.width, i.room.length]" :statusText="i.status"
+                :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
+                :isOwnerShow=false @delete="deleteReservation(i.id)" :isStatusShow=true />
+            </v-card>
+          </div>
+        </v-card>
       </v-col>
 
       <v-col cols="11" md="5">
-        <EventCalendar width="700"/>
+        <div class="text-h6 mx-5 mb-3">
+          วันที่ {{ displayTime() }}
+        </div>
+        <EventCalendar width="700" />
       </v-col>
-      
-      
+
+
     </v-row>
   </div>
 </template>
@@ -27,22 +33,78 @@
 <script>
 import ClassroomCard from '@/components/ClassroomCard.vue'
 import EventCalendar from '@/components/EventCalendar.vue'
-import { defineComponent } from 'vue';
+import { useBuildingStore } from '@/stores/buildings.js'
+import { useClassroomStore } from '@/stores/classrooms.js'
 import { useReservationStore } from '@/stores/reservations.js'
 
 // Components
 
-export default defineComponent({
+export default {
   data: () => ({
     nReservation: 1,
     loading: false,
-    userReservations: []
+    userReservations: [],
+
+    reservations: [],
+    building: null,
+    building_item: [],
+    room: null,
+    classroom_item: [],
+    bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
+    tel: null,
+    startTime: null,
+    finishTime: null
+
   }),
+
+  watch: {
+    building(newVal) {
+
+      if (!newVal) return
+
+      this.classroom_item = []
+      this.room = null
+
+      this.classroomStore.fetchClassroomInBuilding(newVal.id).then(res => {
+        this.classroom_item = res
+      }).catch(err => {
+        console.error("Cannot fetch classrooms data: " + err.message)
+      })
+
+      this.reservationStore.fetchFromBuilding(newVal.id, {
+        minReserveTime: this.startTime,
+        maxReserveTime: this.finishTime
+      }).then(res => {
+        this.reservations = res
+      }).catch(err => {
+        console.error("Cannot fetch reservations: " + err.message)
+      })
+
+
+    },
+
+    room(newVal) {
+
+      if (!newVal) return
+
+      this.reservationStore.fetchFromClassroom(newVal.id, {
+        minReserveTime: this.startTime,
+        maxReserveTime: this.finishTime
+      }).then(res => {
+        this.reservations = res
+      }).catch(err => {
+        console.error("Cannot fetch reservations: " + err.message)
+      })
+
+    }
+  },
 
   methods: {
     fetchUserReservation() {
 
-      let token = localStorage.cookie
+      this.userReservations = []
+
+      let token = localStorage.getItem("cookie")
       if (!token) return
 
       this.loading = true
@@ -55,12 +117,85 @@ export default defineComponent({
         this.userReservations = []
         this.loading = false
       })
-    }
+    },
+
+    selectDate(startTime, finishTime) {
+
+      this.startTime = startTime
+      this.finishTime = finishTime
+
+      console.log(startTime, finishTime)
+
+      let params = {
+        minReserveTime: this.startTime,
+        maxReserveTime: this.finishTime
+      }
+
+      if (this.room) {
+
+        this.reservationStore.fetchFromClassroom(this.room.id, params).then(res => {
+          this.reservations = res
+        }).catch(err => {
+          console.error("Failed to fetch reservations: " + err)
+        })
+
+      } else if (this.building) {
+
+        this.reservationStore.fetchFromBuilding(this.building.id, params).then(res => {
+          this.reservations = res
+        }).catch(err => {
+          console.error("Failed to fetch reservations: " + err)
+        })
+
+      } else {
+
+        this.reservationStore.fetchAll(params).then(res => {
+          this.reservations = res
+          this.fetchUserReservation()
+        }).catch(err => {
+          console.error("Failed to fetch reservations: " + err)
+        })
+
+      }
+    },
+
+    displayTime() {
+      if (!this.startTime || !this.finishTime) return "กรุณาเลือกวันที่"
+
+      var startTime = new Date(this.startTime.toISOString())
+      var finishTime = new Date(this.finishTime.toISOString())
+      finishTime.setDate(finishTime.getDate() - 1)
+
+      let locale = "th-TH"
+      let format = {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      }
+
+      if (startTime.getDate() == finishTime.getDate())
+        return startTime.toLocaleDateString(locale, format)
+      else
+        return startTime.toLocaleDateString(locale, format) + " - " + finishTime.toLocaleDateString(locale, format)
+    },
+
+    deleteReservation(reservationId) {
+			let token = localStorage.getItem("cookie")
+			this.reservationStore.deleteReservation(token, reservationId).then(() => {
+				console.log("delete success")
+        this.fetchUserReservation()
+			}).catch(err => {
+				console.log("delete failed")
+				console.log(err)
+			})
+		}
   },
 
   setup() {
     return {
-      reservationStore: useReservationStore()
+      reservationStore: useReservationStore(),
+      buildingStore: useBuildingStore(),
+      classroomStore: useClassroomStore()
     }
   },
 
@@ -72,8 +207,25 @@ export default defineComponent({
   },
 
   mounted() {
-    this.fetchUserReservation()
+
+    let token = localStorage.getItem("cookie")
+    this.reservationStore.fetchUserReserved(token).then(res => {
+        console.log(res)
+        this.userReservations = res
+        this.loading = false
+      }).catch(err => {
+        console.error(err)
+        this.userReservations = []
+        this.loading = false
+      })
+
+    this.buildingStore.fetchAll().then(res => {
+      this.building_item = res
+    }).catch(err => {
+      console.log(err)
+      this.building_item = []
+    })
   }
-});
+};
 </script>
   

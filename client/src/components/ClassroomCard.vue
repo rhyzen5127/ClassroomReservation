@@ -1,64 +1,66 @@
 <template>
 	<div>
 		<v-card :width="width" variant="">
-				<v-row>
-					<v-col class="pa-0" cols="12" md="4">
-						<v-img 
-							src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
-							:aspect-ratio="1" 
-							cover>
-						</v-img>
-					</v-col>
-					<v-col cols="12" md="8">
-						<div class="text-overline mb-1">
-							{{date}} : {{time}}
-						</div>
+			<v-row>
+				<v-col class="pa-0" cols="12" md="4">
+					<v-img src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
+						:aspect-ratio="1" cover>
+					</v-img>
+				</v-col>
+				<v-col cols="12" md="8">
+					<div class="text-overline mb-1">
+						{{ dateLabel }} : {{ timeRangeLabel }}
+					</div>
 
-						<div class="text-h6 mb-1">
-							{{name}}
-						</div>
+					<div class="text-h6 mb-1">
+						{{ name }}
+					</div>
 
-						<div class="text-caption">
-							{{building}}
-						</div>
+					<div class="text-caption">
+						{{ building }}
+					</div>
 
-						<div class="text-caption">
-							{{sizes}}
-						</div>
+					<div class="text-caption">
+						{{ sizeLabel }}
+					</div>
 
-						<div class="text-caption">
-							{{seats}}
-						</div>
+					<div class="text-caption">
+						{{ seatsLabel }}
+					</div>
 
-						<h6 v-if="isOwnerShow" class="mt-3">
+					<div v-if="isOwnerShow">
+						<h6 class="mt-3">
 							ผู้จอง:
 						</h6>
-						<h6 v-if="isOwnerShow" class="mx-5">
-							{{owner}}
+						<h6 class="mx-5">
+							{{ owner }}
 						</h6>
-						<h6 v-if="isOwnerShow" class="mx-5">
-							{{ownerEmail}}
+						<h6 class="mx-5">
+							{{ ownerEmail }}
 						</h6>
+					</div>
 
-						<div v-if="editable" class="mx-auto justify-end">
-							<div class="text-caption mr-1">
-								สถานะ:
-							</div>
+					<div v-if="isStatusShow" :class="'h6 text-caption mr-5 ' + statusNameColor">
+						{{ statusName }}
+					</div>
 
-							<div class="text-caption mr-5" :class="statusColor">
-								<!-- {{ statusText }} -->
-								{{ statusText }}
-							</div>
 
-							<ManageReservedClassroom/>
-						</div>
+					<div v-if="editable" class="mx-auto justify-end">
+						<ManageReservedClassroom />
+					</div>
 
-						<div v-if="managable" class="mx-auto mb-5 text-center">
-							<v-btn color="white" class="bg-green mx-5"> อนุมัติ </v-btn>
-							<v-btn color="white" class="bg-red mx-5"> ไม่อนุมัติ </v-btn>
-						</div>
-					</v-col>
-				</v-row>
+					<div v-if="statusText=='rejected'" class="mt-7 justify-end">
+						<v-btn class="bg-red" color="white" v-bind="props" @click="$emit('delete')">
+							ลบ
+						</v-btn>
+					</div>
+
+					<div v-if="managable" class="d-flex justify-end ms-16 mb-5 text-center">
+						<v-btn color="white" class="bg-green mx-5" @click="$emit('approve')"> อนุมัติ </v-btn>
+						<v-btn color="white" class="bg-red mx-5" @click="$emit('reject')"> ไม่อนุมัติ </v-btn>
+					</div>
+				</v-col>
+			</v-row>
 		</v-card>
 	</div>
 </template>
@@ -66,7 +68,10 @@
 <!-- Parameter = Building, Name, Date, Time, Picture, Status -->
 <script>
 import ManageReservedClassroom from "./ManageReservedClassroom.vue"
+import { useReservationStore } from "@/stores/reservations.js"
+
 export default ({
+
 	name: 'ClassroomCard',
 
 	components: { ManageReservedClassroom },
@@ -78,22 +83,28 @@ export default ({
 			default: "<<Undefined Building>>",
 		},
 
+		width: {
+			type: Number,
+			require: false,
+			default: "700",
+		},
+
 		name: {
 			type: String,
 			require: false,
 			default: "<<Undefined Room>>",
 		},
 
-		date: {
-			type: String,
+		dateStart: {
+			type: Date,
 			require: false,
-			default: "<<Undefined Date>>",
+			default: null,
 		},
 
-		time: {
-			type: String,
+		dateEnd: {
+			type: Date,
 			require: false,
-			default: "<<Undefined Time>>",
+			default: null,
 		},
 
 		sizes: [{
@@ -108,20 +119,13 @@ export default ({
 
 		seats: {
 			type: Number,
-			require: false,
-			default: "<<Undefined seats>>",
+			require: false
 		},
 
 		statusText: {
 			type: String,
 			require: false,
 			default: "<<Undefined status>>",
-		},
-
-		width: {
-			type: Number,
-			require: false,
-			default: -1,
 		},
 
 		editable: {
@@ -152,30 +156,99 @@ export default ({
 			type: Boolean,
 			require: false,
 			default: false
+		},
+
+		isStatusShow: {
+			type: Boolean,
+			require: false,
+			dafault: true
+		}
+	},
+
+	emits: [
+		"approve",
+		"reject",
+		"delete"
+	],
+
+	methods: {
+		async deleteCard() {
+			this.$emit("delete")
 		}
 	},
 
 	data: () => ({
-		statusText: "รอการอนุมัติ", //รอการอนุมัติ,  อนุมัติแล้ว,  ไม่อนุมัติ: สาเหตุ
+		status: "null",
 		statusColor: "text-orange",  //orange,  green,  red
+		dateFormat: {
+			dateOptions: {
+				year: "numeric",
+				month: "short",
+				weekday: "short",
+				day: "numeric"
+			},
+			timeOptions: {
+				hour: "numeric",
+				minute: "numeric"
+			},
+			locale: 'th-TH'
+		}
 	}),
 
-	methods: {
-		setStatus(status) {
-			if (status == wait) {
-				this.statusText = "รอการอนุมัติ"
-				this.statusColor = "text-orange"
-			} else if (status == accept) {
-				this.statusText = "อนุมัติ"
-				this.statusColor = "text-green"
-			} else if (status == deny) {
-				this.statusText = "ไม่อนุมัติ"
-				this.statusColor = "text-red"
+	computed: {
+
+		dateLabel() {
+			if (!this.dateStart) return ""
+			let locale = this.dateFormat.locale
+			let options = this.dateFormat.dateOptions
+			return this.dateStart.toLocaleDateString(locale, options)
+		},
+
+		timeRangeLabel() {
+			if (!this.dateStart || !this.dateEnd) return ""
+			let locale = this.dateFormat.locale
+			let options = this.dateFormat.timeOptions
+			return this.dateStart.toLocaleTimeString(locale, options) + " น. - " + this.dateEnd.toLocaleTimeString(locale, options) + " น."
+		},
+
+		seatsLabel() {
+			return this.seats ? this.seats + " ที่นั่ง" : "(ไม่ระบุจำนวนที่นั่ง)"
+		},
+
+		sizeLabel() {
+			return this.sizes ? this.sizes[0] + " x " + this.sizes[1] : "(ไม่ระบุขนาดห้อง)"
+		},
+
+		statusName() {
+			if (this.statusText == 'pending') {
+				return "รอการอนุมัติ"
+			} else if (this.statusText == 'approved') {
+				return "อนุมัติ"
+			} else if (this.statusText == 'rejected') {
+				return "ไม่อนุมัติ"
 			} else {
-				this.statusText = "เกิดข้อผิดพลาด"
-				this.statusColor = "text-red"
+				return "เกิดข้อผิดพลาด"
+			}
+		},
+
+		statusNameColor() {
+			if (this.statusText == 'pending') {
+				return "text-orange"
+			} else if (this.statusText == 'approved') {
+				return "text-green"
+			} else if (this.statusText == 'rejected') {
+				return "text-red"
+			} else {
+				return "text-red"
 			}
 		}
-	}
+	},
+
+	setup() {
+		return {
+			reservationStore: useReservationStore()
+		}
+	},
+
 })
 </script>

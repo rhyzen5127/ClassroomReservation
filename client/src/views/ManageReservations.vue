@@ -1,26 +1,19 @@
 <template>
   <div class="mt-10 mx-10">
-    <v-row>
-
-      <v-col cols="12" md="6">
-        <div class="text-h6 mb-1">
-          จัดการคำขอจอง
-        </div>
-        <v-card class="overflow-y-auto" max-height="650">
-        <div v-for="i in nReservation" :key="i + '-classCard'" class="my-4">
-          <v-card >
-            <ClassroomCard width="700" isOwnerShow="true" managable="true"/>
-          </v-card>
-        </div>
-      </v-card>
-      </v-col>
-
-      <v-col cols="11" md="5">
-        <EventCalendar width="700"/>
-      </v-col>
-      
-      
-    </v-row>
+    <div class="text-h6 mb-1">
+      จัดการคำขอจอง
+    </div>
+    <!-- <v-card class="overflow-y-auto" max-height="650"> -->
+      <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
+        <v-card>
+          <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
+                :dateEnd="new Date(i.finishTime)" :size="[i.room.width, i.room.length]" :statusText="i.status"
+                :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
+                isOwnerShow="true" managable="true" @approve="approveReservation(i.id)" @reject="rejectReservation(i.id)" />
+                
+        </v-card>
+      </div>
+    <!-- </v-card> -->
   </div>
 </template>
   
@@ -42,13 +35,15 @@ export default defineComponent({
   }),
 
   methods: {
-    fetchUserReservation() {
+    fetchPendingReservation() {
 
-      let token = localStorage.cookie
-      if (!token) return
+      var today = new Date()
 
+      this.userReservations = []
       this.loading = true
-      this.reservationStore.fetchUserReserved(token).then(res => {
+      this.reservationStore.fetchAll({
+        status: "pending"
+      }).then(res => {
         console.log(res)
         this.userReservations = res
         this.loading = false
@@ -57,7 +52,28 @@ export default defineComponent({
         this.userReservations = []
         this.loading = false
       })
+    },
+
+    approveReservation(reservationId) {
+      let token = localStorage.getItem('cookie')
+      this.reservationStore.approve(token, reservationId).then(res => {
+        alert("reservation " + reservationId + " approved")
+        this.fetchPendingReservation()
+      }).catch(() => {
+        alert("failed to approve reservation " + reservationId)
+      })
+    },
+
+    rejectReservation(reservationId) {
+      let token = localStorage.getItem('cookie')
+      this.reservationStore.reject(token, reservationId).then(res => {
+        alert("reservation " + reservationId + " rejected")
+        this.fetchPendingReservation()
+      }).catch(() => {
+        alert("failed to reject reservation " + reservationId)
+      })
     }
+
   },
 
   setup() {
@@ -72,7 +88,7 @@ export default defineComponent({
   },
 
   mounted() {
-    this.fetchUserReservation()
+    this.fetchPendingReservation()
   }
 });
 </script>
