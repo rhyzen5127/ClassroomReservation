@@ -12,9 +12,10 @@ import NavBarAccount from './icons/NavBarAccount.vue';
       <v-spacer>
       </v-spacer>
 
-      <v-btn color="white" icon="mdi-calendar"/>
+      <!-- <v-btn color="white" icon="mdi-calendar" to="/history"/>
 
-      <v-btn color="white" icon="mdi-bell"/>
+      <v-badge :content="69240" color="white"><v-btn color="white" icon="mdi-bell"/></v-badge> -->
+      
 
       <v-btn color="white" to="/about" icon="mdi-exclamation-thick"/>
 

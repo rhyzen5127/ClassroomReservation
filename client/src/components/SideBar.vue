@@ -7,7 +7,7 @@
       <v-list density="compact" nav>
         <template v-for="item in nav_item" :key="item.title">
           <v-list-item link exact :color="item.color" :prepend-icon="item.icon" :title="item.title" :value="item.value"
-            :to="item.to" />
+            :to="item.to" v-if="isShowMenu(item.checkRole)" />
         </template>
 
       </v-list>
@@ -50,40 +50,55 @@ export default {
         icon: "mdi-home",
         title: "หน้าหลัก",
         value: "home",
-        to: "/"
+        to: "/",
+        checkRole: "null,user,staff,admin"
       },
       {
         color: "orange",
         icon: "mdi-book",
         title: "ค้นหาหรือจองห้องเรียน",
         value: "reservation",
-        to: "/reservation"
+        to: "/reservation",
+        checkRole: "null,user,staff,admin"
       },
       {
         color: "orange",
         icon: "mdi-calendar",
         title: "ประวัติการจอง",
         value: "history",
-        to: "/history"
+        to: "/history",
+        checkRole: "user,staff,admin"
       },
       {
         color: "cyan",
         icon: "mdi-wrench",
         title: "อนุมัติคำขอจอง",
         value: "manageReservations",
-        to: "/managereservations"
+        to: "/managereservations",
+        checkRole: "staff,admin"
       },
       {
         color: "cyan",
         icon: "mdi-wrench",
-        title: "จัดการรายละเอียดห้องเรียน",
+        title: "แก้ไขรายละเอียดห้องเรียน",
         value: "manageClassroomDetails",
-        to: "/manageclassroomdetails"
+        to: "/manageclassroomdetails",
+        checkRole: "staff,admin"
       },
     ]
   }),
   // Methods/Function
   methods: {
+    isShowMenu(role) {
+      // console.log('CONFIG.ROLE: ', role);
+      // console.log('USER.ROLE: ', localStorage.getItem("role"));
+      var currentRole = localStorage.getItem("role");
+      if (role.includes(currentRole+"")) {
+        return true;
+      } else {
+        return false;
+      }
+    }   
   },
 }
 </script>

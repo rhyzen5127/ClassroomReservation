@@ -3,7 +3,8 @@
     <v-main>
       <NavBar :title="title" :isLoggedIn="isLoggedIn" />
       <SideBar :title="title" :email="email" :isLoggedIn="isLoggedIn" />
-      <router-view />
+      
+      <router-view/>
     </v-main>
   </v-app>
 </template>
@@ -12,6 +13,7 @@
 // Components
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
+import { useUserStore } from '@/stores/users.js'
 
 export default {
   name: 'App',
@@ -22,17 +24,35 @@ export default {
   },
 
   data: () => ({
-    title: "Sahachai Plangrit",
-    email: "63050197@kmitl.ac.th",
+    title: "Guest Guest",
+    email: "Guest@kmitl.ac.th",
     isLoggedIn: false,
-    // import voraphat from '@/components/Voraphat.vue'
   }),
+  
+  computed: {
+  },
+
+  setup() {
+    const userStore = useUserStore()
+    return {
+      userStore
+    }
+  },
 
   methods: {
+    setInfoFromStorage(){
+      if (localStorage.fname && localStorage.lname) {
+        this.title = localStorage.fname + " " + localStorage.lname;
+      }
+      if (localStorage.getItem("email")) {
+        this.email = localStorage.getItem("email")
+      }
+      this.isLoggedIn = localStorage.getItem("cookie") != null ? true : false
+    }
   },
 
   mounted() {
-    // this.axios.get("www.google.com").then(res => console.log("axios ok")).catch(err => console.log("axios error"))
+    this.setInfoFromStorage();
   }
 }
 </script>

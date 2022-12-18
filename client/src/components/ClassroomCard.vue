@@ -1,56 +1,64 @@
 <template>
 	<div>
-		<v-card class="mx-auto" max-width="650" max-height="300">
-			<v-card-item>
+		<v-card :width="width" variant="">
 				<v-row>
-					<v-col cols="12" md="4">
-						<v-img src="https://cdn.vuetifyjs.com/images/cards/halcyon.png" max-width="512"
-							max-height="512"></v-img>
+					<v-col class="pa-0" cols="12" md="4">
+						<v-img 
+							src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
+							:aspect-ratio="1" 
+							cover>
+						</v-img>
 					</v-col>
-
 					<v-col cols="12" md="8">
 						<div class="text-overline mb-1">
-							<!-- วันที่ {{date}} เวลา {{time}} -->
-							วันที่ 19 ธันวาคม 2565 เวลา 13:00 - 16:30 น.
+							{{date}} : {{time}}
 						</div>
 
 						<div class="text-h6 mb-1">
-							<!-- {{name}} -->
-							211
+							{{name}}
 						</div>
 
 						<div class="text-caption">
-							<!-- {{building}} -->
-							อาคารพระจอมเกล้าฯ SC-08
+							{{building}}
 						</div>
 
 						<div class="text-caption">
-							<!-- {{sizes[0]}} * {{sizes[1]}} -->
-							ขนาดห้อง: ใหญ่
+							{{sizes}}
 						</div>
 
 						<div class="text-caption">
-							<!-- {{seats}} -->
-							จำนวนที่นั่ง: ประมาณ 500 ที่นั่ง
+							{{seats}}
 						</div>
 
-						<v-card-actions class="mx-auto justify-end">
+						<h6 v-if="isOwnerShow" class="mt-3">
+							ผู้จอง:
+						</h6>
+						<h6 v-if="isOwnerShow" class="mx-5">
+							{{owner}}
+						</h6>
+						<h6 v-if="isOwnerShow" class="mx-5">
+							{{ownerEmail}}
+						</h6>
+
+						<div v-if="editable" class="mx-auto justify-end">
 							<div class="text-caption mr-1">
-								<!-- {{status}} -->
 								สถานะ:
 							</div>
 
 							<div class="text-caption mr-5" :class="statusColor">
 								<!-- {{ statusText }} -->
-								รอการอนุมัติ
+								{{ statusText }}
 							</div>
 
-							<ManageReservedClassroom />
-						</v-card-actions>
+							<ManageReservedClassroom/>
+						</div>
+
+						<div v-if="managable" class="mx-auto mb-5 text-center">
+							<v-btn color="white" class="bg-green mx-5"> อนุมัติ </v-btn>
+							<v-btn color="white" class="bg-red mx-5"> ไม่อนุมัติ </v-btn>
+						</div>
 					</v-col>
 				</v-row>
-
-			</v-card-item>
 		</v-card>
 	</div>
 </template>
@@ -66,49 +74,85 @@ export default ({
 	props: {
 		building: {
 			type: String,
-			require: true,
-			default: "อาคารพระจอมเกล้า SC-08",
+			require: false,
+			default: "<<Undefined Building>>",
 		},
 
 		name: {
 			type: String,
-			require: true,
-			default: "211",
+			require: false,
+			default: "<<Undefined Room>>",
 		},
 
 		date: {
 			type: String,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined Date>>",
 		},
 
 		time: {
 			type: String,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined Time>>",
 		},
 
 		sizes: [{
 			type: Number,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined Sizes>>",
 		}, {
 			type: Number,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined Sizes>>",
 		}],
 
 		seats: {
 			type: Number,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined seats>>",
 		},
 
 		statusText: {
 			type: String,
-			require: true,
-			default: "",
+			require: false,
+			default: "<<Undefined status>>",
 		},
+
+		width: {
+			type: Number,
+			require: false,
+			default: -1,
+		},
+
+		editable: {
+			type: Boolean,
+			require: false,
+			default: false
+		},
+
+		managable: {
+			type: Boolean,
+			require: false,
+			default: false
+		},
+
+		owner: {
+			type: String,
+			require: false,
+			default: "<<Undefined Owner>>"
+		},
+
+		ownerEmail: {
+			type: String,
+			require: false,
+			default: "<<Undefined Email>>"
+		},
+
+		isOwnerShow: {
+			type: Boolean,
+			require: false,
+			default: false
+		}
 	},
 
 	data: () => ({

@@ -34,9 +34,10 @@
 
 
 
-    <v-btn color="green" class="d-flex mt-4" block @click="confirmDialog = true" :disabled="!status">
+    <v-btn color="green" class="d-flex mt-4" block @click="confirmDialog = true" :disabled="!status || !isLoggedIn">
       <h2> จองห้อง </h2>
     </v-btn>
+    
     <v-dialog v-model="confirmDialog">
       <v-card class="ma-15">
         <v-card-text class="d-flex align-center justify-center my-2">
@@ -46,7 +47,7 @@
           <v-row class="mb-5 mx-2">
             <v-col>
               <v-btn class=" bg-green" color="white" block
-                @click="confirmDialog = true, successDialog = true, validate">
+                @click="confirmDialog = true, successDialog = true, addReservation()">
                 ยืนยัน
               </v-btn>
               <v-dialog v-model="successDialog">
@@ -59,7 +60,7 @@
                     <h2 class="text-red"> ล้มเหลว </h2>
                     เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งในภายหลัง
                   </div>
-                  <v-btn color="red" class="mt-5 bg-white" @click="confirmDialog = true, successDialog = false">
+                  <v-btn color="black" class="mt-5" @click="confirmDialog = false, successDialog = false" to="/history">
                     <h5> ปิด </h5>
                   </v-btn>
                 </v-card>
@@ -97,17 +98,14 @@
 </template>
   
 <script>
-import Datepicker from '@vuepic/vue-datepicker';
+import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import axios from 'axios';
 import { useClassroomStore } from '@/stores/classrooms'
 import { useBuildingStore } from '@/stores/buildings'
+import { useReservationStore } from '@/stores/reservations'
 
 import { defineComponent } from 'vue';
-
-const $axios = axios.create({
-  baseURL: "http://localhost:8080",
-})
 
 export default defineComponent({
   name: 'Reservation',
@@ -121,6 +119,7 @@ export default defineComponent({
     date: new Date(),
     endTime: null,
     loading: true,
+    isLoggedIn: false,
 
     status: null,
     roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง
@@ -239,7 +238,6 @@ export default defineComponent({
 
     // check if selected room & time range is available in the current time
     validateRoomAvailability() {
-
       // validate when all inputs are filled in
       if (this.room && this.date && this.startTime && this.endTime) {
 
@@ -267,6 +265,19 @@ export default defineComponent({
 
       }
 
+    },
+
+    addReservation() {
+      console.log("addReservation")
+      this.loading = true
+      this.reservationStore.reserve(localStorage.cookie, this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
+        this.isReservationSuccess = true
+        this.loading = false
+      }).catch((err) => {
+        console.error(err)
+        this.isReservationSuccess = false
+        this.loading = false
+      })
     }
   },
 
@@ -280,13 +291,17 @@ export default defineComponent({
   setup() {
     const buildingStore = useBuildingStore()
     const classroomStore = useClassroomStore()
+    const reservationStore = useReservationStore()
     return {
-        buildingStore,
-        classroomStore
+      buildingStore,
+      classroomStore,
+      reservationStore
     }
   },
 
   mounted() {
+    this.isLoggedIn = localStorage.cookie != undefined ? true : false
+
     this.loading = true
     this.buildingStore.fetchAll().then(res => {
       this.building_item = res
@@ -295,6 +310,8 @@ export default defineComponent({
       console.error("Cannot fetch building data: " + err.message)
       this.loading = false
     })
+
+    
   }
 });
 </script>

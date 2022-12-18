@@ -335,11 +335,9 @@ export default defineComponent({
     },
 
     setup() {
-        const buildingStore = useBuildingStore()
-        const classroomStore = useClassroomStore()
         return {
-            buildingStore,
-            classroomStore
+            buildingStore: useBuildingStore(),
+            classroomStore: useClassroomStore()
         }
     },
 
@@ -348,7 +346,6 @@ export default defineComponent({
         this.buildingStore.fetchAll().then((res) => {
             this.building_item = res
             this.loading = false
-            console.log(this.building_item)
         }).catch(err => {
             console.error("Cannot fetch building data: " + err.message)
             this.building_item = []

@@ -9,6 +9,10 @@ import interactionPlugin from '@fullcalendar/interaction'
 
 const id = ref(0)
 
+const props = defineProps({
+    width: Number
+})
+
 const options = reactive({
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -45,7 +49,7 @@ const options = reactive({
 </script>
 
 <template>
-    <v-card class="">
+    <v-card :width="width" class="">
         <FullCalendar v-bind:options="options" />
     </v-card>
 </template>
