@@ -10,6 +10,7 @@ import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -68,14 +69,15 @@ public class ClassroomController
     }
 
     @PostMapping("/classrooms/{id}")
-    void editClassroom(
+    ResponseEntity<HttpStatus> editClassroom(
             Authentication auth,
             @PathVariable Integer id,
             @RequestBody EditClassroomForm form
     )
     {
         // Allow only staff to edit classroom
-        if (!auth.getAuthorities().contains(UserRole.STAFF))
+        var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null || !userDetail.isStaff())
         {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,  "Only staff can edit classroom details");
         }
@@ -95,6 +97,7 @@ public class ClassroomController
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
 
+        return ResponseEntity.ok(HttpStatus.OK);
     }
 
 

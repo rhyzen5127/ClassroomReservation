@@ -21,13 +21,7 @@ public class UserDetail implements UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        var roleName = user.getRole();
-        return switch (roleName) {
-            case "admin" -> List.of( UserRole.ADMIN, UserRole.STAFF, UserRole.USER );
-            case "staff" -> List.of( UserRole.STAFF, UserRole.USER );
-            case "user" -> List.of( UserRole.USER );
-            default -> null;
-        };
+        return user.isStaff() ? List.of( UserRole.STAFF, UserRole.USER ) : List.of( UserRole.USER );
     }
 
     @Override

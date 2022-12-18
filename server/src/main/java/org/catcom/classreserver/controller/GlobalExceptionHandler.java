@@ -69,7 +69,8 @@ public class GlobalExceptionHandler {
     public @ResponseBody Map<String, Object> handleGenericResponseException(ResponseStatusException ex, HttpServletResponse res)
     {
         res.setStatus(ex.getStatusCode().value());
-        var reason = ex.getReason() == null ? "null" : ex.getReason();
+        var reason = ex.getReason();
+        if (reason == null) reason = ex.getMessage();
         return Map.of("reason", reason);
     }
 

@@ -4,10 +4,16 @@ import jakarta.annotation.Nullable;
 import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.classroom.ClassroomRepos;
+import org.catcom.classreserver.model.reservation.Reservation;
+import org.catcom.classreserver.model.reservation.ReservationRepos;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static org.catcom.classreserver.model.reservation.ReservationStatus.APPROVED;
 
 @Service
 public class ClassroomService
@@ -47,4 +53,5 @@ public class ClassroomService
 
         classroomRepos.save(room);
     }
+
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.reservation.Reservation;
 
 import java.util.ArrayList;
@@ -50,5 +49,11 @@ public class User
     @OneToMany(targetEntity = Reservation.class, mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
+
+
+    public boolean isStaff()
+    {
+        return this.role.equalsIgnoreCase("staff");
+    }
 
 }

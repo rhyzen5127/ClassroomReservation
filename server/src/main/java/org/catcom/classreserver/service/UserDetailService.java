@@ -51,7 +51,6 @@ public class UserDetailService implements UserDetailsService
             return loadUserByUsername(jwt.getSubject());
         }
 
-
         if (principal instanceof UserDetail userDetailPrincipal)
         {
             return userDetailPrincipal;

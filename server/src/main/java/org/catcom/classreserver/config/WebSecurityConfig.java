@@ -3,11 +3,14 @@ package org.catcom.classreserver.config;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.shaded.gson.Gson;
+import org.catcom.classreserver.security.CustomCorsFilter;
 import org.catcom.classreserver.service.UserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -23,11 +26,14 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -63,10 +69,17 @@ public class WebSecurityConfig
     }
 
     @Bean
+    public CorsFilter corsFilter(CorsConfigurationSource configSource)
+    {
+        return new CustomCorsFilter(configSource);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
 
         http
+
                 .cors().and()
 
                 // disable csrf protection to make our life easier
@@ -77,39 +90,52 @@ public class WebSecurityConfig
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .formLogin(login -> login
-                        .successHandler(new SimpleUrlAuthenticationSuccessHandler())
-                        .failureHandler(new SimpleUrlAuthenticationFailureHandler())
-                        .successForwardUrl("/login/token")
+                        .successHandler((req, res, auth) -> {
+                            res.setStatus(HttpStatus.OK.value());
+                        })
+                        .failureHandler((req, res, ex) -> {
+                            res.sendError(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+                        })
+                        .successForwardUrl("/token")
                         .permitAll()
                 )
-                .logout(Customizer.withDefaults())
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/reservations").authenticated()
+                        .requestMatchers("/users/current").authenticated()
+                        .requestMatchers("/users").authenticated()
+                        .requestMatchers("/reservations").permitAll()
                         .anyRequest().permitAll()
                 )
 
 
+                .exceptionHandling(handler -> handler
+                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+
+                )
         ;
 
         return http.build();
     }
 
+    /*
     @Bean
     public CorsConfigurationSource corsConfigurationSource()
     {
         var config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://192.168.1.67:5173"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Access-Control-Allow-Origin, Access-Control-Allow-Headers"));
         config.setAllowedMethods(List.of("GET", "POST", "DELETE"));
         config.setAllowCredentials(true);
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
         var src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/**", config);
 
+        System.out.println("cors config");
+
         return src;
     }
+    *
+     */
 
     @Autowired
     private RsaKeyProperties rsaKeys;

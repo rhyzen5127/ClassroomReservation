@@ -106,7 +106,7 @@ export default {
                 console.log("RES::: ", res);
                 localStorage.setItem("cookie", res)
                 // REDIRECT to HOME
-                
+
                 window.location.href = '/'
             }).catch(err => {
                 localStorage.setItem("cookie", null)

@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,19 +75,16 @@ public class ClassReserver
 		return userDetail.getUser();
 	}
 
-	@PostMapping("/login/token")
+	@PostMapping("/token")
 	@ResponseBody
-	Map<String, Object> loginSuccess(Authentication auth)
+	Map<String, Object> getAccessToken(Authentication auth)
 	{
 
 		var accessToken = tokenService.generateAccessToken(auth);
-		var userDetail = userDetailService.loadByAuthentication(auth);
+		//var userDetail = userDetailService.loadByAuthentication(auth);
 
 		var responseData = new HashMap<String, Object>();
-
-		responseData.put("user", userDetail.getUser());
 		responseData.put("token", accessToken);
-
 		return responseData;
 
 	}

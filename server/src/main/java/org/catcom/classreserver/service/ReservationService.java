@@ -6,6 +6,7 @@ import org.catcom.classreserver.exceptions.reservations.InvalidReservationStateE
 import org.catcom.classreserver.exceptions.reservations.ReservationException;
 import org.catcom.classreserver.exceptions.reservations.ReservationNotFoundException;
 import org.catcom.classreserver.exceptions.reservations.ReservationScheduleOverlapException;
+import org.catcom.classreserver.model.building.Building;
 import org.catcom.classreserver.model.classroom.Classroom;
 import org.catcom.classreserver.model.reservation.Reservation;
 import org.catcom.classreserver.model.reservation.ReservationRepos;
@@ -14,7 +15,6 @@ import org.catcom.classreserver.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +46,7 @@ public class ReservationService
     {
 
         validateReservedRoom(room);
+        validateBookingSchedule(bookingTime, startTime, finishTime);
         validateRoomSchedule(room, startTime, finishTime);
 
         var reservation = new Reservation();
@@ -54,31 +55,28 @@ public class ReservationService
         reservation.setBookingTime(bookingTime);
         reservation.setStartTime(startTime);
         reservation.setFinishTime(finishTime);
-        reservation.setPending();
 
-        // reservationRepos.save(reservation);
+        if (reserver.isStaff())
+        {
+            reservation.setApproved();
+        }
+        else
+        {
+            reservation.setPending();
+        }
+
+        reservationRepos.save(reservation);
 
     }
 
-    /* Find by owner and status */
-    public List<Reservation> findReservations(@Nullable User owner, @Nullable String status)
-    throws ReservationException
-    {
-        return findReservations(owner, null, status);
-    }
-
-    /* Find by room and status */
-    public List<Reservation> findReservations(@Nullable Classroom classroom, @Nullable String status)
-    throws ReservationException
-    {
-        return findReservations(null, classroom, status);
-    }
-
-    /* Find by owner, room and status */
     public List<Reservation> findReservations(
         @Nullable User owner,
+        @Nullable Building building,
         @Nullable Classroom classroom,
-        @Nullable String status
+        @Nullable String status,
+        @Nullable LocalDateTime minReserveTime,
+        @Nullable LocalDateTime maxReserveTime,
+        @Nullable Integer limit
     ) throws ReservationException
     {
 
@@ -94,6 +92,11 @@ public class ReservationService
             specs.add(ReservationRepos.hasOwner(owner));
         }
 
+        if (building != null)
+        {
+            specs.add(ReservationRepos.inBuilding(building));
+        }
+
         if (classroom != null)
         {
             specs.add(ReservationRepos.forRoom(classroom));
@@ -104,10 +107,17 @@ public class ReservationService
             specs.add(ReservationRepos.hasStatus(status));
         }
 
+        if (minReserveTime != null || maxReserveTime != null)
+        {
+            specs.add(ReservationRepos.scheduleDuring(minReserveTime, maxReserveTime));
+        }
+
         var spec = Specification.allOf(specs);
 
-        return reservationRepos.findAll(spec);
+        var results = reservationRepos.findAll(spec);
 
+
+        return limit == null ? results : results.subList(0, limit);
     }
 
 
@@ -126,8 +136,7 @@ public class ReservationService
             int id,
             @Nullable Classroom newRoom,
             @Nullable LocalDateTime newStartTime,
-            @Nullable LocalDateTime newFinishTime,
-            @Nullable String newStatus
+            @Nullable LocalDateTime newFinishTime
     ) throws ReservationException
     {
 
@@ -154,16 +163,6 @@ public class ReservationService
             requireScheduleValidated = true;
         }
 
-        if (newStatus != null)
-        {
-            if (APPROVED.equalsIgnoreCase(newStatus))
-            {
-                requireScheduleValidated = true;
-            }
-            validateStatus(reservation, newStatus);
-            reservation.setStatus(newStatus);
-        }
-
         if (requireScheduleValidated)
         {
             validateRoomSchedule(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime());
@@ -174,26 +173,61 @@ public class ReservationService
 
     }
 
+    public void updateReservationStatus(int id, String status)
+    {
+        var reservation = getReservation(id);
+
+        validateStatus(reservation, status);
+
+        reservation.setStatus(status);
+
+        if (reservation.isApproved())
+        {
+            validateRoomSchedule(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime());
+
+            // automatically reject all other overlapping schedules
+            var specs = Specification.allOf(
+                    ReservationRepos.except(reservation),
+                    ReservationRepos.hasStatus(PENDING),
+                    ReservationRepos.overlappingScheduleForRoom(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime())
+            );
+
+            var overlappingReservations = reservationRepos.findAll(specs);
+
+            for (var r : overlappingReservations) {
+                r.setStatus(REJECTED);
+            }
+
+            reservationRepos.saveAll(overlappingReservations);
+        }
+
+        reservationRepos.save(reservation);
+    }
+
+    public void deleteReservation(int id, User deleter)
+    {
+        var reservation = getReservation(id);
+
+        if (!reservation.isRejected())
+            throw new ReservationException("Only rejected or pending reservations can be deleted");
+
+        if (!reservation.getOwner().equals(deleter))
+            throw new ReservationException("Only owner can delete their reservation");
+
+        reservationRepos.delete(reservation);
+    }
 
     public boolean isRoomAvailableAtGivenSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        var reservations = findReservations(classroom, APPROVED);
+        if (!classroom.isReady()) return false;
 
-        for (var reservation : reservations)
-        {
-            // check for overlapped schedule
-            var curStartTime = reservation.getStartTime();
-            var curFinishTime = reservation.getFinishTime();
-            if (    curStartTime.isBefore(startTime) &&
-                    curFinishTime.isAfter(startTime) ||
-                    curStartTime.isBefore(finishTime) &&
-                    curFinishTime.isAfter(finishTime)
-            ) {
-                return false;
-            }
-        }
+        var specs = Specification.allOf(
+                ReservationRepos.hasStatus(APPROVED),
+                ReservationRepos.overlappingScheduleForRoom(classroom, startTime, finishTime)
+        );
 
-        return true;
+        var overlapped = reservationRepos.findAll(specs);
+        return overlapped.isEmpty();
     }
 
     void validateReservedRoom(
@@ -212,13 +246,30 @@ public class ReservationService
 
     }
 
+    // private static final Duration MIN_BOOKING_ADVANCE_DURATION = Duration.of(1, ChronoUnit.DAYS);
+
+    private void validateBookingSchedule(LocalDateTime bookingTime, LocalDateTime startTime, LocalDateTime finishTime)
+    {
+        if (startTime.isAfter(finishTime))
+        {
+            throw new ReservationException("Invalid reservation time range");
+        }
+
+        //var duration = Duration.between(bookingTime, startTime);
+
+        //if (duration.compareTo(MIN_BOOKING_ADVANCE_DURATION) < 0)
+        //{
+        //    throw new ReservationException("The reservation must be requested in advance for at least " + MIN_BOOKING_ADVANCE_DURATION);
+        //}
+    }
+
     void validateRoomSchedule(
             @NonNull Classroom classroom,
             @NonNull LocalDateTime startTime,
             @NonNull LocalDateTime finishTime
     ) throws ReservationScheduleOverlapException
     {
-        if (!isRoomAvailableAtGivenSchedule(classroom, startTime, finishTime)) {
+        if (!isRoomAvailableAtGivenSchedule(classroom, startTime, finishTime) || !classroom.isReady()) {
             throw new ReservationScheduleOverlapException("The requested room is not available for the given time");
         }
     }
@@ -231,8 +282,7 @@ public class ReservationService
         switch (newStatus)
         {
             case PENDING -> {
-                if (reservation.isPending()) return;
-                throw new InvalidReservationStateException("Cannot set reservation status to pending again");
+                throw new InvalidReservationStateException("Cannot set reservation status to pending");
             }
             case CANCELED ->
             {

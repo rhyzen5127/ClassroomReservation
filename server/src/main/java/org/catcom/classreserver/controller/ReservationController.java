@@ -4,7 +4,9 @@ import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.exceptions.reservations.ReservationException;
 import org.catcom.classreserver.form.EditReservationForm;
 import org.catcom.classreserver.form.ReserveForm;
+import org.catcom.classreserver.model.building.BuildingRepos;
 import org.catcom.classreserver.model.reservation.Reservation;
+import org.catcom.classreserver.model.reservation.ReservationStatus;
 import org.catcom.classreserver.model.user.User;
 import org.catcom.classreserver.service.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
@@ -34,6 +36,8 @@ public class ReservationController
 
     @Autowired
     private ClassroomService classroomService;
+    @Autowired
+    private BuildingRepos buildingRepos;
 
     // GET reservation by id
     @GetMapping("/reservations/{id}")
@@ -53,24 +57,53 @@ public class ReservationController
     // GET all reservations
     @GetMapping("/reservations")
     @ResponseBody List<Reservation> getAllReservations(
-            Authentication auth,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) ZonedDateTime minReserveTime,
+            @RequestParam(required = false) ZonedDateTime maxReserveTime,
+            @RequestParam(required = false) Integer limit
     )
     {
-        return reservationService.findReservations(null, null, status);
+        var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
+        var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+
+        return reservationService.findReservations(
+                null,
+                null,
+                null,
+                status,
+                minLocalReserveTime,
+                maxLocalReserveTime,
+                limit
+        );
     }
 
     // GET reservation of a room
     @GetMapping("/classrooms/{roomId}/reservations")
     @ResponseBody List<Reservation> getReservationOfRoom(
             @PathVariable Integer roomId,
-            @RequestParam(required = false) String status
-    )
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) ZonedDateTime minReserveTime,
+            @RequestParam(required = false) ZonedDateTime maxReserveTime,
+            @RequestParam(required = false) Integer limit
+            )
     {
         try
         {
             var room = classroomService.findRoom(roomId);
-            return reservationService.findReservations(room, status);
+
+            var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
+            var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+
+            return reservationService.findReservations(
+                    null,
+                    null,
+                    room,
+                    status,
+                    minLocalReserveTime,
+                    maxLocalReserveTime,
+                    limit
+            );
+
         }
         catch (ClassroomException e)
         {
@@ -82,23 +115,29 @@ public class ReservationController
     // GET reservation of a user
     @GetMapping("/users/{userId}/reservations")
     @ResponseBody List<Reservation> getReservationOfUser(
-            Authentication auth,
             @PathVariable Integer userId,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) ZonedDateTime minReserveTime,
+            @RequestParam(required = false) ZonedDateTime maxReserveTime,
+            @RequestParam(required = false) Integer limit
     )
     {
-        var requestingUserDetail = userDetailService.loadByAuthentication(auth);
-
         try
         {
             var user = userDetailService.loadUserById(userId).getUser();
 
-            if (!requestingUserDetail.isStaff() && requestingUserDetail.getId() != userId)
-            {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staffs can get reservations of other user directly");
-            }
+            var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
+            var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
 
-            return reservationService.findReservations(user, status);
+            return reservationService.findReservations(
+                    user,
+                    null,
+                    null,
+                    status,
+                    minLocalReserveTime,
+                    maxLocalReserveTime,
+                    limit
+            );
         }
         catch (UsernameNotFoundException ex)
         {
@@ -107,26 +146,70 @@ public class ReservationController
 
     }
 
+    // GET reservation of room in building
+    @GetMapping("/buildings/{buildingId}/reservations")
+    @ResponseBody List<Reservation> getReservationOfBuilding(
+            @PathVariable Integer buildingId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) ZonedDateTime minReserveTime,
+            @RequestParam(required = false) ZonedDateTime maxReserveTime,
+            @RequestParam(required = false) Integer limit
+    )
+    {
+        try
+        {
+            var building = buildingRepos.findById(buildingId);
+
+            if (building.isEmpty())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown building id: " + buildingId);
+
+            var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
+            var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+
+            return reservationService.findReservations(
+                    null,
+                    building.get(),
+                    null,
+                    status,
+                    minLocalReserveTime,
+                    maxLocalReserveTime,
+                    limit
+            );
+        }
+        catch (UsernameNotFoundException ex)
+        {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        }
+
+    }
+
+
     // POST new reservation
     @PostMapping("/reservations")
     void reserve(Authentication auth, @RequestBody ReserveForm form)
     {
 
         var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null)
+        {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
 
         try
         {
 
-            var reserveTime = LocalDateTime.now();
-
             var reserveRoom = classroomService.findRoom(form.getRoomId());
+
+            var doReserveTime = LocalDateTime.now();
+            var startTime = form.getStartTime().toLocalDateTime();
+            var finishTime = form.getFinishTime().toLocalDateTime();
 
             reservationService.reserve(
                     userDetail.getUser(),
                     reserveRoom,
-                    reserveTime,
-                    form.getStartTime().toLocalDateTime(),
-                    form.getFinishTime().toLocalDateTime()
+                    doReserveTime,
+                    startTime,
+                    finishTime
             );
 
         }
@@ -169,12 +252,10 @@ public class ReservationController
             @RequestBody EditReservationForm form
     )
     {
-
         var userDetail = userDetailService.loadByAuthentication(auth);
-
         if (userDetail == null)
         {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
         try
@@ -183,12 +264,6 @@ public class ReservationController
             // additional check for non-staff user
             if (!userDetail.getAuthorities().contains(UserRole.STAFF))
             {
-
-                // not allow status change
-                if (form.getStatus() == null)
-                {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only staffs can edit reservation's status");
-                }
 
                 var editingReservation = reservationService.getReservation(id);
 
@@ -209,8 +284,7 @@ public class ReservationController
                     id,
                     newReservedRoom,
                     newStartTime,
-                    newFininshTime,
-                    form.getStatus()
+                    newFininshTime
             );
 
         }
@@ -220,4 +294,44 @@ public class ReservationController
         }
 
     }
+
+
+    // POST approve reservation
+    @PostMapping("/reservations/{id}/approve")
+    void approveReservation(Authentication auth, @PathVariable int id)
+    {
+        var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null || !userDetail.isStaff())
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        reservationService.updateReservationStatus(id, ReservationStatus.APPROVED);
+    }
+
+
+    // POST reject reservation
+    @PostMapping("/reservations/{id}/reject")
+    void rejectReservation(Authentication auth, @PathVariable int id)
+    {
+        var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null || !userDetail.isStaff())
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        reservationService.updateReservationStatus(id, ReservationStatus.REJECTED);
+    }
+
+    // POST reject reservation
+    @DeleteMapping("/reservations/{id}")
+    void deleterReservation(Authentication auth, @PathVariable int id)
+    {
+        var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null)
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        reservationService.deleteReservation(id, userDetail.getUser());
+    }
+
 }
