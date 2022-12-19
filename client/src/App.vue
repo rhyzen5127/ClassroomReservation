@@ -51,6 +51,7 @@ export default {
           this.role = res.role
           this.isLoggedIn = true
         }).catch(err => {
+          localStorage.setItem("cookie", null)
           console.error(err)
         })
       }

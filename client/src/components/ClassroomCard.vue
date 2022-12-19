@@ -49,7 +49,7 @@
 						<ManageReservedClassroom />
 					</div>
 
-					<div v-if="statusText=='rejected'" class="mt-7 justify-end">
+					<div v-if="deleteable && statusText=='rejected'" class="mt-7 justify-end">
 						<v-btn class="bg-red" color="white" v-bind="props" @click="$emit('delete')">
 							ลบ
 						</v-btn>
@@ -107,15 +107,17 @@ export default ({
 			default: null,
 		},
 
-		sizes: [{
+		roomwidth: {
 			type: Number,
 			require: false,
 			default: "<<Undefined Sizes>>",
-		}, {
+		},
+
+		roomlength: {
 			type: Number,
 			require: false,
 			default: "<<Undefined Sizes>>",
-		}],
+		},
 
 		seats: {
 			type: Number,
@@ -162,6 +164,12 @@ export default ({
 			type: Boolean,
 			require: false,
 			dafault: true
+		},
+
+		deleteable: {
+			type: Boolean,
+			require: false,
+			dafault: false
 		}
 	},
 
@@ -212,11 +220,11 @@ export default ({
 		},
 
 		seatsLabel() {
-			return this.seats ? this.seats + " ที่นั่ง" : "(ไม่ระบุจำนวนที่นั่ง)"
+			return this.seats ? (this.seats + " ที่นั่ง") : "(ไม่ระบุจำนวนที่นั่ง)"
 		},
 
 		sizeLabel() {
-			return this.sizes ? this.sizes[0] + " x " + this.sizes[1] : "(ไม่ระบุขนาดห้อง)"
+			return (this.roomwidth && this.roomlength) ? (this.roomwidth + " x " + this.roomlength + " เมตร") : "(ไม่ระบุขนาดห้อง)"
 		},
 
 		statusName() {
@@ -249,6 +257,24 @@ export default ({
 			reservationStore: useReservationStore()
 		}
 	},
+
+	beforeMount() {
+
+		// fix timezone
+		let minuteOffset = new Date().getTimezoneOffset()
+		if (this.dateStart) {
+			console.log(this.dateStart)
+			console.log(this.dateStart.toLocaleTimeString(this.dateFormat.locale, this.dateFormat.dateOptions))
+			this.dateStart.setMinutes(this.dateStart.getMinutes() - minuteOffset)
+			console.log(this.dateStart)
+			console.log(this.dateStart.toLocaleTimeString(this.dateFormat.locale, this.dateFormat.dateOptions))
+		} 
+		if (this.dateEnd) this.dateEnd.setMinutes(this.dateEnd.getMinutes() - minuteOffset)
+	},
+
+	mounted() {
+	
+	}
 
 })
 </script>

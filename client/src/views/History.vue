@@ -10,9 +10,9 @@
           <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
             <v-card>
               <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-                :dateEnd="new Date(i.finishTime)" :size="[i.room.width, i.room.length]" :statusText="i.status"
+                :dateEnd="new Date(i.finishTime)" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" :statusText="i.status"
                 :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
-                :isOwnerShow=false @delete="deleteReservation(i.id)" :isStatusShow=true />
+                :isOwnerShow=false @delete="deleteReservation(i.id)" :isStatusShow="true" :deleteable="true" />
             </v-card>
           </div>
         </v-card>

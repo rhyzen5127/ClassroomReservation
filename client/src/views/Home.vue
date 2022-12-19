@@ -30,9 +30,9 @@
       <v-card class="overflow-y-auto" max-height="485">
         <div v-for="i in reservations" :key="i.id" class="my-4">
           <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-            :dateEnd="new Date(i.finishTime)" :size="[i.room.width, i.room.length]" :statusText="i.status"
+            :dateEnd="new Date(i.finishTime)" :statusText="i.status"
             :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="648.91" class="my-5"
-            isOwnerShow="true" :isStatusShow="false"/>
+            isOwnerShow="true" :isStatusShow="false" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" />
           <v-divider></v-divider>
         </div>
       </v-card>

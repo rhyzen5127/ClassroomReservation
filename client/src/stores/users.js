@@ -4,6 +4,8 @@ import axios from '../plugins/axios'
 
 export const useUserStore = defineStore('users', () => {
 
+  const currentUser = ref(null)
+
   function addBearerAuthHeader(headers, token) {
     headers["Authorization"] = "Bearer " + token
     return headers
@@ -11,7 +13,9 @@ export const useUserStore = defineStore('users', () => {
 
   async function fetchCurrentUser(token) {
     let headers = addBearerAuthHeader({}, token)
+    currentUser.value = null
     let res = await axios.get("/users/current", { headers } )
+    currentUser.value = res.data
     return res.data
   }
 
@@ -20,9 +24,11 @@ export const useUserStore = defineStore('users', () => {
         "Content-Type": "multipart/form-data"
     }
     let res = await axios.post("/login", { username, password }, { headers } )
+    let token = res.data.token
+    await fetchCurrentUser(token)
     return res.data.token
 
   }
 
-  return { login, fetchCurrentUser, addBearerAuthHeader }
+  return { currentUser, login, fetchCurrentUser, addBearerAuthHeader }
 })

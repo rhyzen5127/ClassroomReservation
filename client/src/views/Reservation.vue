@@ -7,11 +7,11 @@
       persistence-hint return-object>
     </v-select>
 
-    <v-select v-model="room" :label="isLabelChange" :disabled="isDisableRoomSelect" :items="classroom_items"
+    <v-select v-model="room" :label="roomSelectLabel" :disabled="isDisableRoomSelect" :items="classroom_items"
       item-title="name" item-value="id" return-object>
     </v-select>
 
-    <Datepicker v-model="pickDate" :enable-time-picker="false" placeholder="กรุณาเลือกวันที่" fixed-start
+    <Datepicker v-model="date" :enable-time-picker="false" placeholder="กรุณาเลือกวันที่" fixed-start
       :clearable="false" :min-date="minSelectDate" />
 
     <v-row class="mt-2">
@@ -22,7 +22,7 @@
 
       <v-col>
         <Datepicker v-model="endTime" time-picker minutes-increment="30" minutes-grid-increment="30" :clearable="false"
-          :start-time="{ hours: 8, minutes: 30 }" placeholder="กรุณาเลือกเวลาสื้นสุด" :min-time="startTime" />
+          :start-time="startTime || { hours: 8, minutes: 30 }" placeholder="กรุณาเลือกเวลาสื้นสุด" :min-time="startTime" />
       </v-col>
     </v-row>
 
@@ -34,8 +34,8 @@
 
 
 
-    <v-btn v-if="isLoggedIn" color="green" class="d-flex mt-4" block @click="confirmDialog = true"
-      :disabled="!status || !isLoggedIn">
+    <v-btn v-if="true" color="green" class="d-flex mt-4" block @click="confirmDialog = true"
+      :disabled="!isLoggedIn || !inputValid">
       <h2> จองห้อง </h2>
     </v-btn>
 
@@ -105,9 +105,11 @@ import axios from 'axios';
 import { useClassroomStore } from '@/stores/classrooms'
 import { useBuildingStore } from '@/stores/buildings'
 import { useReservationStore } from '@/stores/reservations'
+import { useUserStore } from '@/stores/users'
 
 import { defineComponent } from 'vue';
 import { isThursday } from 'date-fns';
+import { th } from 'date-fns/locale';
 
 export default defineComponent({
   name: 'Reservation',
@@ -115,19 +117,25 @@ export default defineComponent({
   components: { Datepicker },
 
   data: () => ({
+
+    // inputs
     building: null,
     room: null,
     startTime: null,
     date: new Date(),
     endTime: null,
     loading: true,
+
+    // form state check
     isLoggedIn: false,
+    inputValid: false,
 
     status: null,
     roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง | ไม่พร้อมใช้งาน
     roomStatusColor: "grey", //เขียว | แดง
 
     pickDate: new Date(),
+    minSelectDate: new Date(),
 
     isReservationSuccess: null,
 
@@ -147,27 +155,19 @@ export default defineComponent({
     },
 
     // [Room select dropdown] Label
-    isLabelChange() {
+    roomSelectLabel() {
       return this.building ? "กรุณาเลือกห้อง" : "กรุณาเลือกห้อง (กรุณาเลือกอาคารก่อน)";
     },
 
-    minSelectDate() {
-      var pickDate = new Date(this.date.toISOString())
-      pickDate.setDate(pickDate.getDate() + 3)
-      return pickDate
-    }
   },
 
   watch: {
 
-    date(newVal, oldVal) {
-      if (newVal) {
-        console.log(this.date);
-        this.validateRoomAvailability()
-      }
+    date() {
+      this.validateRoomAvailability()
     },
 
-    building(newVal, oldVal) {
+    building(newVal) {
       if (newVal) {
 
         // clear classroom options & input
@@ -186,37 +186,21 @@ export default defineComponent({
         })
 
         this.loading = false
-        this.validateRoomAvailability()
 
       }
+      this.validateRoomAvailability()
     },
 
     room(newVal) {
-      if (!newVal) return
-      this.loading = true
-      console.log(this.room)
-      if (this.room.status != "ready") {
-        this.status = false
-        this.roomStatus = "ห้องไม่พร้อมใช้งาน"
-        this.roomStatusColor = "red"
-      }else  {
-        this.status = false
-        this.roomStatus = "ห้องพร้อมใช้งาน"
-        this.roomStatusColor = "cyan text-white"
-      }
-      this.loading = false
+      this.validateRoomAvailability()
     },
 
     startTime(newVal) {
-      if (newVal) {
-        this.validateRoomAvailability()
-      }
+      this.validateRoomAvailability()
     },
 
     endTime(newVal) {
-      if (newVal) {
-        this.validateRoomAvailability()
-      }
+      this.validateRoomAvailability()
     }
 
   },
@@ -225,80 +209,73 @@ export default defineComponent({
     testDisplayStatus() {
       this.status = !this.status
       if (this.status && this.isReady) {
-        this.status = true
-        this.isReady = true
+        markRoomStatusAvailable(true)
+      } else {
+        markRoomStatusAvailable(false)
+      }
+    },
+
+    markRoomStatusAvailable(available) {
+      if (available) {
+        this.inputValid = true
         this.roomStatus = "ว่าง"
         this.roomStatusColor = "green"
-      } else if (!this.status && this.isReady) {
-        this.status = false
-        this.isReady = true
-        this.roomStatus = "ไม่ว่าง"
-        this.roomStatusColor = "red"
       } else {
-        this.status = false
-        this.isReady = false
+        this.inputValid = false
         this.roomStatus = "ไม่ว่าง"
         this.roomStatusColor = "red"
       }
     },
 
-    getStartDate() {
-      var startDatetime = new Date()
-      startDatetime.setFullYear(this.date.getFullYear())
-      startDatetime.setMonth(this.date.getMonth())
-      startDatetime.setDate(this.date.getDate())
-      startDatetime.setHours(this.startTime.hours)
-      startDatetime.setMinutes(this.startTime.minutes)
-      startDatetime.setSeconds(this.startTime.seconds)
+    markRoomStatusReady(available) {
+      if (available) {
+        this.inputValid = false
+        this.roomStatus = "ห้องพร้อมใช้งาน"
+        this.roomStatusColor = "cyan text-white"
+      } else {
+        this.inputValid = false
+        this.roomStatus = "ห้องไม่พร้อมใช้งาน"
+        this.roomStatusColor = "red"
+      }
+    },
 
+    resetRoomStatus() {
+        this.inputValid = false
+        this.roomStatus = "สถานะห้องเรียน"
+        this.roomStatusColor = "grey"
+    },
+
+    getStartDate() {
+      var startDatetime = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), this.startTime.hours, this.startTime.minutes,this.startTime.seconds)
       return startDatetime.toISOString()
 
-
-      // return this.date.getFullYear() + "-" + this.date.getMonth() + "-" + this.date.getDate() + "T"
-      // + this.startTime.hours + ":" + this.startTime.minutes
     },
 
     getEndDate() {
-      var finishDatetime = new Date()
-      finishDatetime.setFullYear(this.date.getFullYear())
-      finishDatetime.setMonth(this.date.getMonth())
-      finishDatetime.setDate(this.date.getDate())
-      finishDatetime.setHours(this.endTime.hours)
-      finishDatetime.setMinutes(this.endTime.minutes)
-      finishDatetime.setSeconds(this.endTime.seconds)
-
+      var finishDatetime = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), this.endTime.hours, this.endTime.minutes,this.endTime.seconds)
       return finishDatetime.toISOString()
-      //return (this.date.getFullYear() + "-" + (this.date.getMonth() + 1) + "-" + this.date.getDate() + "T" + this.endTime.toLocaleTimeString()).toString()
     },
 
     // check if selected room & time range is available in the current time
     validateRoomAvailability() {
-      // validate when all inputs are filled in
-      if (this.room && this.date && this.startTime && this.endTime) {
 
-        this.roomStatus = "สถานะห้องเรียน"
-        this.roomStatusColor = "grey"
-
-        this.loading = true
+      // validate room status
+      if (this.room) {
         if (this.room.status != "ready") {
-          this.status = false
-          this.roomStatus = "ห้องไม่พร้อมใช้งาน"
-          this.roomStatusColor = "red"
-          this.loading = false
+          this.markRoomStatusReady(false)
           return
         }
-        this.loading = false
+      }
+
+      // validate room availability when all inputs are filled in
+      if (this.room && this.date && this.startTime && this.endTime) {
+
+        this.resetRoomStatus()
+        this.loading = true
+
         // fetch classroom options
         this.classroomStore.checkIsRoomAvailable(this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
-          if (res) {
-            this.status = true
-            this.roomStatus = "ว่าง"
-            this.roomStatusColor = "green"
-          } else {
-            this.status = false
-            this.roomStatus = "ไม่ว่าง"
-            this.roomStatusColor = "red"
-          }
+          this.markRoomStatusAvailable(res)
           this.loading = false
         }).catch(err => {
           console.error("Cannot check classroom availability: " + err.message)
@@ -310,7 +287,11 @@ export default defineComponent({
     },
 
     addReservation() {
-      console.log("addReservation")
+
+      if (!this.inputValid || !this.isLoggedIn) {
+        return
+      }
+
       this.loading = true
       this.reservationStore.reserve(localStorage.getItem('cookie'), this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
         this.isReservationSuccess = true
@@ -320,25 +301,33 @@ export default defineComponent({
         this.isReservationSuccess = false
         this.loading = false
       })
+
     }
   },
 
   components: {
   },
 
+  // store setup
   setup() {
-    const buildingStore = useBuildingStore()
-    const classroomStore = useClassroomStore()
-    const reservationStore = useReservationStore()
     return {
-      buildingStore,
-      classroomStore,
-      reservationStore
+      buildingStore: useBuildingStore(),
+      classroomStore: useClassroomStore(),
+      reservationStore: useReservationStore(),
+      userStore: useUserStore()
     }
   },
 
+  // date picker setup
+  beforeMount() {
+    this.minSelectDate = new Date()
+    this.minSelectDate.setDate(this.minSelectDate.getDate() + 3)
+    this.date = this.minSelectDate
+  },
+
   mounted() {
-    this.isLoggedIn = localStorage.cookie != undefined ? true : false
+
+    this.isLoggedIn = this.userStore.currentUser ? true : false
 
     this.loading = true
     this.buildingStore.fetchAll().then(res => {

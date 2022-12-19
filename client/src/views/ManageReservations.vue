@@ -7,7 +7,7 @@
       <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
         <v-card>
           <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-                :dateEnd="new Date(i.finishTime)" :size="[i.room.width, i.room.length]" :statusText="i.status"
+                :dateEnd="new Date(i.finishTime)" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" :statusText="i.status"
                 :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
                 isOwnerShow="true" managable="true" @approve="approveReservation(i.id)" @reject="rejectReservation(i.id)" />
                 
@@ -57,20 +57,20 @@ export default defineComponent({
     approveReservation(reservationId) {
       let token = localStorage.getItem('cookie')
       this.reservationStore.approve(token, reservationId).then(res => {
-        alert("reservation " + reservationId + " approved")
+        alert("อนุมัติการจองสำเร็จ")
         this.fetchPendingReservation()
       }).catch(() => {
-        alert("failed to approve reservation " + reservationId)
+        alert("อนุมัติการจองล้มเหลว")
       })
     },
 
     rejectReservation(reservationId) {
       let token = localStorage.getItem('cookie')
       this.reservationStore.reject(token, reservationId).then(res => {
-        alert("reservation " + reservationId + " rejected")
+        alert("ปฏิเสธการจองสำเร็จ")
         this.fetchPendingReservation()
       }).catch(() => {
-        alert("failed to reject reservation " + reservationId)
+        alert("ปฏิเสธการจองล้มเหลว")
       })
     }
 
