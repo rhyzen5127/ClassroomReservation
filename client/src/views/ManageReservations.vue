@@ -6,10 +6,22 @@
     <!-- <v-card class="overflow-y-auto" max-height="650"> -->
       <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
         <v-card>
-          <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-                :dateEnd="new Date(i.finishTime)" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" :statusText="i.status"
-                :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
-                isOwnerShow="true" managable="true" @approve="approveReservation(i.id)" @reject="rejectReservation(i.id)" />
+          <ClassroomCard 
+            :building="i.room.building.name" 
+            :room="i.room.name" 
+            :roomwidth="i.room.width" 
+            :roomlength="i.room.length" 
+            :seats="i.room.seats" 
+            :statusText="i.status"
+            :owner="i.owner.firstName + ' ' + i.owner.lastName" 
+            :ownerEmail="i.owner.email" 
+            :dateStart="new Date(i.startTime)"
+            :dateEnd="new Date(i.finishTime)" 
+            :width="700" class="my-5"
+            isOwnerShow managable 
+            @approve="approveReservation(i.id)" 
+            @reject="rejectReservation(i.id)" 
+            />
                 
         </v-card>
       </div>

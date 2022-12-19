@@ -9,10 +9,21 @@
         <v-card class="overflow-y-auto" max-height="650">
           <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
             <v-card>
-              <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-                :dateEnd="new Date(i.finishTime)" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" :statusText="i.status"
-                :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="700" class="my-5"
-                :isOwnerShow=false @delete="deleteReservation(i.id)" :isStatusShow="true" :deleteable="true" />
+              <ClassroomCard 
+                :building="i.room.building.name" 
+                :room="i.room.name" 
+                :roomwidth="i.room.width" 
+                :roomlength="i.room.length" 
+                :seats="i.room.seats" 
+                :owner="i.owner.firstName + ' ' + i.owner.lastName" 
+                :ownerEmail="i.owner.email" 
+                :dateStart="new Date(i.startTime)"
+                :dateEnd="new Date(i.finishTime)" 
+                :statusText="i.status"
+                :width="700" class="my-5"
+                @delete="deleteReservation(i.id)" 
+                isStatusShow deleteable 
+                />
             </v-card>
           </div>
         </v-card>
@@ -38,19 +49,20 @@ import { useReservationStore } from '@/stores/reservations.js'
 
 export default {
   data: () => ({
-    nReservation: 1,
+
     loading: false,
+
+    building_item: [],
+    classroom_item: [],
     userReservations: [],
 
-    reservations: [],
-    building: null,
-    building_item: [],
     room: null,
-    classroom_item: [],
-    bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
-    tel: null,
+    building: null,
     startTime: null,
-    finishTime: null
+    finishTime: null,
+
+    bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
+    tel: null
 
   }),
 
@@ -206,8 +218,10 @@ export default {
   mounted() {
 
     let token = localStorage.getItem("cookie")
+
+    if (!token) return
+
     this.reservationStore.fetchUserReserved(token).then(res => {
-        console.log(res)
         this.userReservations = res
         this.loading = false
       }).catch(err => {
@@ -219,7 +233,7 @@ export default {
     this.buildingStore.fetchAll().then(res => {
       this.building_item = res
     }).catch(err => {
-      console.log(err)
+      console.error(err)
       this.building_item = []
     })
   }

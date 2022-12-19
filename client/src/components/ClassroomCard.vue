@@ -13,7 +13,7 @@
 					</div>
 
 					<div class="text-h6 mb-1">
-						{{ name }}
+						{{ room }}
 					</div>
 
 					<div class="text-caption">
@@ -77,34 +77,19 @@ export default ({
 	components: { ManageReservedClassroom },
 
 	props: {
+
+		// building info
 		building: {
 			type: String,
 			require: false,
 			default: "<<Undefined Building>>",
 		},
 
-		width: {
-			type: Number,
-			require: false,
-			default: "700",
-		},
-
-		name: {
+		// classroom info
+		room: {
 			type: String,
 			require: false,
 			default: "<<Undefined Room>>",
-		},
-
-		dateStart: {
-			type: Date,
-			require: false,
-			default: null,
-		},
-
-		dateEnd: {
-			type: Date,
-			require: false,
-			default: null,
 		},
 
 		roomwidth: {
@@ -124,24 +109,7 @@ export default ({
 			require: false
 		},
 
-		statusText: {
-			type: String,
-			require: false,
-			default: "<<Undefined status>>",
-		},
-
-		editable: {
-			type: Boolean,
-			require: false,
-			default: false
-		},
-
-		managable: {
-			type: Boolean,
-			require: false,
-			default: false
-		},
-
+		// reservation info
 		owner: {
 			type: String,
 			require: false,
@@ -152,6 +120,37 @@ export default ({
 			type: String,
 			require: false,
 			default: "<<Undefined Email>>"
+		},
+
+		dateStart: {
+			type: Date,
+			require: false,
+			default: null,
+		},
+
+		dateEnd: {
+			type: Date,
+			require: false,
+			default: null,
+		},
+
+		statusText: {
+			type: String,
+			require: false,
+			default: "<<Undefined status>>",
+		},
+
+		// control options
+		editable: { 
+			type: Boolean,
+			require: false,
+			default: false
+		},
+
+		managable: {
+			type: Boolean,
+			require: false,
+			default: false
 		},
 
 		isOwnerShow: {
@@ -170,6 +169,13 @@ export default ({
 			type: Boolean,
 			require: false,
 			dafault: false
+		},
+
+		// miscellaneous
+		width: {
+			type: Number,
+			require: false,
+			default: "700",
 		}
 	},
 
@@ -180,9 +186,8 @@ export default ({
 	],
 
 	methods: {
-		async deleteCard() {
-			this.$emit("delete")
-		}
+
+
 	},
 
 	data: () => ({
@@ -260,16 +265,15 @@ export default ({
 
 	beforeMount() {
 
-		// fix timezone
+		// fix timezone by adding timezone offset to the date since the date given by API is local date time
 		let minuteOffset = new Date().getTimezoneOffset()
 		if (this.dateStart) {
-			console.log(this.dateStart)
-			console.log(this.dateStart.toLocaleTimeString(this.dateFormat.locale, this.dateFormat.dateOptions))
 			this.dateStart.setMinutes(this.dateStart.getMinutes() - minuteOffset)
-			console.log(this.dateStart)
-			console.log(this.dateStart.toLocaleTimeString(this.dateFormat.locale, this.dateFormat.dateOptions))
 		} 
-		if (this.dateEnd) this.dateEnd.setMinutes(this.dateEnd.getMinutes() - minuteOffset)
+
+		if (this.dateEnd) {
+			this.dateEnd.setMinutes(this.dateEnd.getMinutes() - minuteOffset)
+		}
 	},
 
 	mounted() {

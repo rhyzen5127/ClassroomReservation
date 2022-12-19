@@ -101,15 +101,12 @@
 <script>
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import axios from 'axios';
 import { useClassroomStore } from '@/stores/classrooms'
 import { useBuildingStore } from '@/stores/buildings'
 import { useReservationStore } from '@/stores/reservations'
 import { useUserStore } from '@/stores/users'
 
 import { defineComponent } from 'vue';
-import { isThursday } from 'date-fns';
-import { th } from 'date-fns/locale';
 
 export default defineComponent({
   name: 'Reservation',

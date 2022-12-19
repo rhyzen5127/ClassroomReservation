@@ -29,10 +29,20 @@
       <v-divider></v-divider>
       <v-card class="overflow-y-auto" max-height="485">
         <div v-for="i in reservations" :key="i.id" class="my-4">
-          <ClassroomCard :building="i.room.building.name" :name="i.room.name" :dateStart="new Date(i.startTime)"
-            :dateEnd="new Date(i.finishTime)" :statusText="i.status"
-            :owner="i.owner.firstName + ' ' + i.owner.lastName" :ownerEmail="i.owner.email" width="648.91" class="my-5"
-            isOwnerShow="true" :isStatusShow="false" :roomwidth="i.room.width" :roomlength="i.room.length" :seats="i.room.seats" />
+          <ClassroomCard 
+            :building="i.room.building.name" 
+            :room="i.room.name" 
+            :roomwidth="i.room.width" 
+            :roomlength="i.room.length" 
+            :seats="i.room.seats" 
+            :owner="i.owner.firstName + ' ' + i.owner.lastName" 
+            :ownerEmail="i.owner.email" 
+            :dateStart="new Date(i.startTime)"
+            :dateEnd="new Date(i.finishTime)" 
+            :statusText="i.status"
+            :width="648.91" class="my-5"
+            isOwnerShow
+            />
           <v-divider></v-divider>
         </div>
       </v-card>
