@@ -14,7 +14,6 @@
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
 import { useUserStore } from '@/stores/users.js'
-import { isThursday } from 'date-fns'
 
 export default {
   name: 'App',
@@ -41,8 +40,10 @@ export default {
   },
 
   methods: {
-    setInfoFromStorage() {
+    fetchUserData() {
+
       this.isLoggedIn = false
+
       let userToken = localStorage.getItem("cookie")
       if (userToken) {
         this.userStore.fetchCurrentUser(userToken).then(res => {
@@ -51,15 +52,16 @@ export default {
           this.role = res.role
           this.isLoggedIn = true
         }).catch(err => {
-          localStorage.setItem("cookie", null)
+          localStorage.removeItem("cookie")
           console.error(err)
         })
       }
+      
     }
   },
 
   mounted() {
-    this.setInfoFromStorage();
+    this.fetchUserData();
   }
 }
 </script>
