@@ -18,10 +18,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="11" md="5">
-        <div class="text-h6 mx-5 mb-3">
-          วันที่ {{ displayTime() }}
-        </div>
+      <v-col cols="11" md="5" class="mt-10">
         <EventCalendar width="700" />
       </v-col>
 

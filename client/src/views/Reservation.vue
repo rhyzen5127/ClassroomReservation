@@ -35,7 +35,7 @@
 
 
     <v-btn v-if="isLoggedIn" color="green" class="d-flex mt-4" block @click="confirmDialog = true"
-      :disabled="!status || !isLoggedIn || !ready">
+      :disabled="!status || !isLoggedIn">
       <h2> จองห้อง </h2>
     </v-btn>
 
@@ -185,6 +185,7 @@ export default defineComponent({
           this.loading = false
         })
 
+        this.loading = false
         this.validateRoomAvailability()
 
       }
@@ -193,13 +194,17 @@ export default defineComponent({
     room(newVal) {
       if (!newVal) return
       this.loading = true
+      console.log(this.room)
       if (this.room.status != "ready") {
-        this.status = true
+        this.status = false
         this.roomStatus = "ห้องไม่พร้อมใช้งาน"
         this.roomStatusColor = "red"
-        this.loading = false
-        return
+      }else  {
+        this.status = false
+        this.roomStatus = "ห้องพร้อมใช้งาน"
+        this.roomStatusColor = "cyan text-white"
       }
+      this.loading = false
     },
 
     startTime(newVal) {
@@ -276,12 +281,13 @@ export default defineComponent({
 
         this.loading = true
         if (this.room.status != "ready") {
-          this.status = true
+          this.status = false
           this.roomStatus = "ห้องไม่พร้อมใช้งาน"
           this.roomStatusColor = "red"
           this.loading = false
           return
         }
+        this.loading = false
         // fetch classroom options
         this.classroomStore.checkIsRoomAvailable(this.room.id, this.getStartDate(), this.getEndDate()).then(res => {
           if (res) {

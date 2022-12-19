@@ -126,9 +126,23 @@ export default defineComponent({
 
   methods: {
 
+    fetchClassroomData() {
+      this.isLoggedIn = localStorage.cookie != undefined ? true : false
+
+      this.loading = true
+      this.buildingStore.fetchAll().then(res => {
+        this.building_item = res
+        this.loading = false
+      }).catch(err => {
+        console.error("Cannot fetch building data: " + err.message)
+        this.loading = false
+      })
+    },
+
     resetInput() {
       this.seats = this.room != null ? this.room.seats : "Error"
       this.status = this.room != null ? this.room.ready : false
+      this.editStatus = ""
     },
 
     submitUpdateClassroom() {
@@ -137,6 +151,8 @@ export default defineComponent({
       this.loading = true
       this.classroomStore.updateClassroom(localStorage.cookie, this.room.id, updatedSeats, updatedStatus).then(() => {
         this.editStatus = "แก้ไขสำเร็จ !"
+        this.room.seats = updatedSeats
+        this.room.status = updatedStatus
         this.loading = false
       }).catch(err => {
         console.error(err)
@@ -158,16 +174,7 @@ export default defineComponent({
   },
 
   mounted() {
-    this.isLoggedIn = localStorage.cookie != undefined ? true : false
-
-    this.loading = true
-    this.buildingStore.fetchAll().then(res => {
-      this.building_item = res
-      this.loading = false
-    }).catch(err => {
-      console.error("Cannot fetch building data: " + err.message)
-      this.loading = false
-    })
+    this.fetchClassroomData()
 
 
   }
