@@ -9,39 +9,39 @@
 				</v-col>
 				<v-col cols="12" md="8">
 					<div class="text-overline mb-1">
-						{{ dateLabel }} : {{ timeRangeLabel }}
+						{{ roomUseDate }} : {{ roomUseTime }}
 					</div>
 
 					<div class="text-h6 mb-1">
-						{{ room }}
+						{{ classroomName }}
 					</div>
 
 					<div class="text-caption">
-						{{ building }}
+						{{ buildingName }}
 					</div>
 
 					<div class="text-caption">
-						{{ sizeLabel }}
+						{{ classroomSize }}
 					</div>
 
 					<div class="text-caption">
-						{{ seatsLabel }}
+						{{ classroomSeats }}
 					</div>
 
-					<div v-if="isOwnerShow">
+					<div v-if="showOwner">
 						<h6 class="mt-3">
 							ผู้จอง:
 						</h6>
 						<h6 class="mx-5">
-							{{ owner }}
+							{{ ownerUserName }}
 						</h6>
 						<h6 class="mx-5">
-							{{ ownerEmail }}
+							{{ ownerUserEmail }}
 						</h6>
 					</div>
 
-					<div v-if="isStatusShow" :class="'h6 text-caption mr-5 ' + statusNameColor">
-						{{ statusName }}
+					<div v-if="showStatus" :class="'h6 text-caption mr-5 ' + reservationStatusColor">
+						{{ reservationStatus }}
 					</div>
 
 
@@ -50,7 +50,7 @@
 					</div>
 
 					<div v-if="deleteable && statusText=='rejected'" class="mt-7 justify-end">
-						<v-btn class="bg-red" color="white" v-bind="props" @click="$emit('delete')">
+						<v-btn class="bg-red" color="white" @click="$emit('delete')">
 							ลบ
 						</v-btn>
 					</div>
@@ -68,7 +68,6 @@
 <!-- Parameter = Building, Name, Date, Time, Picture, Status -->
 <script>
 import ManageReservedClassroom from "./ManageReservedClassroom.vue"
-import { useReservationStore } from "@/stores/reservations.js"
 
 export default ({
 
@@ -78,105 +77,20 @@ export default ({
 
 	props: {
 
-		// building info
-		building: {
-			type: String,
-			require: false,
-			default: "<<Undefined Building>>",
-		},
+		// reservation data from backend API
+		reservation: {  type: Object, required: false, default: {} },
 
-		// classroom info
-		room: {
-			type: String,
-			require: false,
-			default: "<<Undefined Room>>",
-		},
-
-		roomwidth: {
-			type: Number,
-			require: false,
-			default: "<<Undefined Sizes>>",
-		},
-
-		roomlength: {
-			type: Number,
-			require: false,
-			default: "<<Undefined Sizes>>",
-		},
-
-		seats: {
-			type: Number,
-			require: false
-		},
-
-		// reservation info
-		owner: {
-			type: String,
-			require: false,
-			default: "<<Undefined Owner>>"
-		},
-
-		ownerEmail: {
-			type: String,
-			require: false,
-			default: "<<Undefined Email>>"
-		},
-
-		dateStart: {
-			type: Date,
-			require: false,
-			default: null,
-		},
-
-		dateEnd: {
-			type: Date,
-			require: false,
-			default: null,
-		},
-
-		statusText: {
-			type: String,
-			require: false,
-			default: "<<Undefined status>>",
-		},
+		// display options
+		showOwner: { type: Boolean, require: false, default: false },
+		showStatus: { type: Boolean, require: false, dafault: false },
 
 		// control options
-		editable: { 
-			type: Boolean,
-			require: false,
-			default: false
-		},
-
-		managable: {
-			type: Boolean,
-			require: false,
-			default: false
-		},
-
-		isOwnerShow: {
-			type: Boolean,
-			require: false,
-			default: false
-		},
-
-		isStatusShow: {
-			type: Boolean,
-			require: false,
-			dafault: true
-		},
-
-		deleteable: {
-			type: Boolean,
-			require: false,
-			dafault: false
-		},
+		editable: { type: Boolean, require: false, default: false },
+		managable: { type: Boolean, require: false, default: false },
+		deleteable: { type: Boolean, require: false, dafault: false },
 
 		// miscellaneous
-		width: {
-			type: Number,
-			require: false,
-			default: "700",
-		}
+		width: { type: Number, require: false, default: 700 }
 	},
 
 	emits: [
@@ -186,7 +100,6 @@ export default ({
 	],
 
 	methods: {
-
 
 	},
 
@@ -206,74 +119,113 @@ export default ({
 			},
 			locale: 'th-TH'
 		}
+		
 	}),
 
 	computed: {
 
-		dateLabel() {
-			if (!this.dateStart) return ""
+		// building info
+		buildingName() {
+			let defaultValue = "<<Undefined building>>"
+			if (!this.reservation || !this.reservation.room || !this.reservation.room.building) return defaultValue
+			return this.reservation.room.building.name || defaultValue
+		},
+
+		// classroom info
+		classroomName() {
+			let defaultValue = "<<Undefined room>>"
+			if (!this.reservation || !this.reservation.room) return defaultValue
+			return this.reservation.room.name || defaultValue
+		},
+
+		classroomSize() {
+			let defaultValue = "(ไม่ระบุขนาดห้อง)"
+			if (!this.reservation || !this.reservation.room) return defaultValue
+			let roomWidth = this.reservation.room.width
+			let roomLength = this.reservation.room.length
+			return (roomWidth && roomLength) ? (roomWidth + " x " + roomLength + " เมตร") : defaultValue
+		},
+
+		classroomSeats() {
+			let defaultValue = "(ไม่ระบุจำนวนที่นั่ง)"
+			if (!this.reservation || !this.reservation.seats) return defaultValue
+			let seatCount = this.reservation.seats
+			return seatCount ? (seatCount + " ที่นั่ง") : defaultValue
+		},
+
+		// owner user info
+		ownerUserName() {
+			let defaultValue = "<<Undefined owner>>"
+			if (!this.reservation.owner) return defaultValue
+			let fname = this.reservation.owner.firstName
+			let lname = this.reservation.owner.lastName
+			return (fname && lname) ? (fname + " " + lname) : defaultValue
+		},
+
+		ownerUserEmail() {
+			let defaultValue = "<<Undefined owner email>>"
+			if (!this.reservation.owner) return defaultValue
+			return this.reservation.owner.email || defaultValue
+		},
+
+		// reservation info
+		roomUseDate() {
+			let defaultValue = "<<Undefined use date>>"
+			if (!this.reservation.startTime) return defaultValue
+
+			let date = new Date(this.reservation.startTime)
 			let locale = this.dateFormat.locale
 			let options = this.dateFormat.dateOptions
-			return this.dateStart.toLocaleDateString(locale, options)
+			let minuteOffset = new Date().getTimezoneOffset()
+			date.setMinutes(date.getMinutes() - minuteOffset)
+
+			return date.toLocaleDateString(locale, options)
 		},
 
-		timeRangeLabel() {
-			if (!this.dateStart || !this.dateEnd) return ""
+		roomUseTime() {
+			let defaultValue = "<<Undefined use time>>"
+			if (!this.reservation.startTime || !this.reservation.finishTime) return defaultValue
+
+			let d1 = new Date(this.reservation.startTime)
+			let d2 = new Date(this.reservation.finishTime)
 			let locale = this.dateFormat.locale
 			let options = this.dateFormat.timeOptions
-			return this.dateStart.toLocaleTimeString(locale, options) + " น. - " + this.dateEnd.toLocaleTimeString(locale, options) + " น."
+			let minuteOffset = new Date().getTimezoneOffset()
+
+			d1.setMinutes(d1.getMinutes() - minuteOffset)
+			d2.setMinutes(d2.getMinutes() - minuteOffset)
+
+			return d1.toLocaleTimeString(locale, options) + " น. - " + d2.toLocaleTimeString(locale, options) + " น."
 		},
 
-		seatsLabel() {
-			return this.seats ? (this.seats + " ที่นั่ง") : "(ไม่ระบุจำนวนที่นั่ง)"
-		},
-
-		sizeLabel() {
-			return (this.roomwidth && this.roomlength) ? (this.roomwidth + " x " + this.roomlength + " เมตร") : "(ไม่ระบุขนาดห้อง)"
-		},
-
-		statusName() {
-			if (this.statusText == 'pending') {
-				return "รอการอนุมัติ"
-			} else if (this.statusText == 'approved') {
-				return "อนุมัติ"
-			} else if (this.statusText == 'rejected') {
-				return "ไม่อนุมัติ"
-			} else {
-				return "เกิดข้อผิดพลาด"
+		reservationStatus() {
+			let defaultValue = "<<Undefined status>>"
+			if (!this.reservation.status) return defaultValue
+			switch (this.reservation.status) {
+				case 'pending' : return "รอการอนุมัติ"
+				case 'approved' : return "อนุมัติ"
+				case 'rejected' : return "ไม่อนุมัติ"
+				default : return "<<Invalid status>>"
 			}
 		},
 
-		statusNameColor() {
-			if (this.statusText == 'pending') {
-				return "text-orange"
-			} else if (this.statusText == 'approved') {
-				return "text-green"
-			} else if (this.statusText == 'rejected') {
-				return "text-red"
-			} else {
-				return "text-red"
+		reservationStatusColor() {
+			let defaultValue = "text-red"
+			if (!this.reservation.status) return defaultValue
+			switch (this.reservation.status) {
+				case 'pending' : return "text-orange"
+				case 'approved' : return "text-green"
+				case 'rejected' : return "text-red"
+				default : defaultValue
 			}
 		}
+
 	},
 
 	setup() {
-		return {
-			reservationStore: useReservationStore()
-		}
 	},
 
 	beforeMount() {
-
-		// fix timezone by adding timezone offset to the date since the date given by API is local date time
-		let minuteOffset = new Date().getTimezoneOffset()
-		if (this.dateStart) {
-			this.dateStart.setMinutes(this.dateStart.getMinutes() - minuteOffset)
-		} 
-
-		if (this.dateEnd) {
-			this.dateEnd.setMinutes(this.dateEnd.getMinutes() - minuteOffset)
-		}
 	},
 
 	mounted() {

@@ -7,18 +7,9 @@
       <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
         <v-card>
           <ClassroomCard 
-            :building="i.room.building.name" 
-            :room="i.room.name" 
-            :roomwidth="i.room.width" 
-            :roomlength="i.room.length" 
-            :seats="i.room.seats" 
-            :statusText="i.status"
-            :owner="i.owner.firstName + ' ' + i.owner.lastName" 
-            :ownerEmail="i.owner.email" 
-            :dateStart="new Date(i.startTime)"
-            :dateEnd="new Date(i.finishTime)" 
+            :reservation="i"
             :width="700" class="my-5"
-            isOwnerShow managable 
+            showOwner managable 
             @approve="approveReservation(i.id)" 
             @reject="rejectReservation(i.id)" 
             />
