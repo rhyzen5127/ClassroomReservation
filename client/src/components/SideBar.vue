@@ -61,7 +61,7 @@ export default {
         title: "หน้าหลัก",
         value: "home",
         to: "/",
-        checkRole: "null,user,staff,admin"
+        checkRole: "null,user,staff"
       },
       {
         color: "orange",
@@ -69,7 +69,7 @@ export default {
         title: "ค้นหาหรือจองห้องเรียน",
         value: "reservation",
         to: "/reservation",
-        checkRole: "null,user,staff,admin"
+        checkRole: "null,user,staff"
       },
       {
         color: "orange",
@@ -77,7 +77,7 @@ export default {
         title: "ประวัติการจอง",
         value: "history",
         to: "/history",
-        checkRole: "user,staff,admin"
+        checkRole: "user,staff"
       },
       {
         color: "cyan",
@@ -85,7 +85,7 @@ export default {
         title: "อนุมัติคำขอจอง",
         value: "manageReservations",
         to: "/managereservations",
-        checkRole: "staff,admin"
+        checkRole: "staff"
       },
       {
         color: "cyan",
@@ -93,7 +93,15 @@ export default {
         title: "แก้ไขรายละเอียดห้องเรียน",
         value: "manageClassroomDetails",
         to: "/manageclassroomdetails",
-        checkRole: "staff,admin"
+        checkRole: "staff"
+      },
+      {
+        color: "cyan",
+        icon: "mdi-file-chart",
+        title: "นำออกรายงานการจอง",
+        value: "report",
+        to: "/report",
+        checkRole: "staff"
       },
     ]
   }),

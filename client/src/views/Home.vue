@@ -72,16 +72,39 @@ export default {
   },
 
   methods: {
-    selectDate(startTime, finishTime) {
 
+    selectDate(startTime, finishTime) {
       this.startTime = startTime
       this.finishTime = finishTime
+      this.loadReservations()
+    },
 
-      console.log(startTime, finishTime)
+    displayTime() {
+      if (!this.startTime || !this.finishTime) return "กรุณาเลือกวันที่"
+
+      var startTime = new Date(this.startTime.toISOString())
+      var finishTime = new Date(this.finishTime.toISOString())
+      finishTime.setDate(finishTime.getDate() - 1)
+
+      let locale = "th-TH"
+      let format = { 				
+        year:"numeric", 
+				month:"short",
+				day:"numeric" 
+      }
+
+      if (startTime.getDate() == finishTime.getDate()) 
+        return startTime.toLocaleDateString(locale, format)
+      else
+        return startTime.toLocaleDateString(locale, format) + " - " + finishTime.toLocaleDateString(locale, format)
+    },
+
+    loadReservations() {
 
       let params = {
         minReserveTime: this.startTime,
-        maxReserveTime: this.finishTime
+        maxReserveTime: this.finishTime,
+        status: "approved"
       }
 
       if (this.room) {
@@ -109,27 +132,9 @@ export default {
         })
 
       }
-    },
 
-    displayTime() {
-      if (!this.startTime || !this.finishTime) return "กรุณาเลือกวันที่"
-
-      var startTime = new Date(this.startTime.toISOString())
-      var finishTime = new Date(this.finishTime.toISOString())
-      finishTime.setDate(finishTime.getDate() - 1)
-
-      let locale = "th-TH"
-      let format = { 				
-        year:"numeric", 
-				month:"short",
-				day:"numeric" 
-      }
-
-      if (startTime.getDate() == finishTime.getDate()) 
-        return startTime.toLocaleDateString(locale, format)
-      else
-        return startTime.toLocaleDateString(locale, format) + " - " + finishTime.toLocaleDateString(locale, format)
     }
+
   },
 
   watch: {

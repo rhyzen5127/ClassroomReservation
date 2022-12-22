@@ -11,10 +11,17 @@ export const useUserStore = defineStore('users', () => {
     return headers
   }
 
+  function addBearerAuth(token, options) {
+    options = options || {}
+    options.headers = options.headers || {}
+    if (token) options.headers["Authorization"] = "Bearer " + token
+    return options
+  }
+
   async function fetchCurrentUser(token) {
-    let headers = addBearerAuthHeader({}, token)
     currentUser.value = null
-    let res = await axios.get("/users/current", { headers } )
+    let options = addBearerAuth(token, {})
+    let res = await axios.get("/users/current", options )
     currentUser.value = res.data
     return res.data
   }
@@ -30,5 +37,5 @@ export const useUserStore = defineStore('users', () => {
 
   }
 
-  return { currentUser, login, fetchCurrentUser, addBearerAuthHeader }
+  return { currentUser, login, fetchCurrentUser, addBearerAuthHeader, addBearerAuth }
 })

@@ -1,205 +1,220 @@
 <template>
   <div class="mt-10 mx-10">
     <v-row>
-
       <v-col cols="12" md="6">
-        <div class="text-h6 mb-1">
-          เร็ว ๆ นี้
+        <div class="d-flex">
+          <v-select
+            v-model="recentlyFilter"
+            class="mx-2"
+            label="ตัวกรอง"
+            :items="group_options"
+            item-title="name"
+            item-value="id"
+          />
+          <v-select
+            v-model="statusFilter"
+            class="mx-2"
+            label="สถานะ"
+            :items="status_options"
+            item-title="name"
+            item-value="id"
+          />
         </div>
         <v-card class="overflow-y-auto" max-height="650">
-          <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
+          <div
+            v-for="i in userReservations"
+            :key="i + '-classCard'"
+            class="my-4"
+          >
             <v-card>
-              <ClassroomCard 
+              <ClassroomCard
                 :reservation="i"
-                :width="700" class="my-5"
-                @delete="deleteReservation(i.id)" 
-                showStatus deleteable 
-                />
+                :width="700"
+                class="my-5"
+                @delete="deleteReservation(i.id)"
+                showStatus
+                deleteable
+                showReserveNote
+              />
             </v-card>
           </div>
         </v-card>
       </v-col>
 
       <v-col cols="11" md="5" class="mt-10">
-        <EventCalendar width="700" />
+        <EventCalendar :width="700" @dateSelected="selectDate" />
       </v-col>
-
-
     </v-row>
   </div>
 </template>
   
 <script>
-import ClassroomCard from '@/components/ClassroomCard.vue'
-import EventCalendar from '@/components/EventCalendar.vue'
-import { useBuildingStore } from '@/stores/buildings.js'
-import { useClassroomStore } from '@/stores/classrooms.js'
-import { useReservationStore } from '@/stores/reservations.js'
-
-// Components
+import ClassroomCard from "@/components/ClassroomCard.vue";
+import EventCalendar from "@/components/EventCalendar.vue";
+import { useBuildingStore } from "@/stores/buildings.js";
+import { useClassroomStore } from "@/stores/classrooms.js";
+import { useReservationStore } from "@/stores/reservations.js";
+import { useUserStore } from "../stores/users";
 
 export default {
   data: () => ({
-
     loading: false,
 
     building_item: [],
     classroom_item: [],
     userReservations: [],
+    group_options: [
+      { id: "now", name: "เร็ว ๆ นี้" },
+      { id: "past", name: "ผ่านไปแล้ว" },
+      { id: "all", name: "ทั้งหมด" },
+    ],
+    status_options: [
+      { id: "all", name: "ทั้งหมด" },
+      { id: "pending", name: "รอการอนุมัติ" },
+      { id: "approved", name: "อนุมัติแล้ว" },
+      { id: "rejected", name: "ไม่อนุมัติ" },
+    ],
 
     room: null,
     building: null,
     startTime: null,
     finishTime: null,
+    recentlyFilter: "now",
+    statusFilter: "all",
 
-    bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
-    tel: null
-
+    bannerPath: new URL(
+      "@/assets/images/home-banner-background.png",
+      import.meta.url
+    ).href,
+    tel: null,
   }),
 
   watch: {
-    building(newVal) {
-
-      if (!newVal) return
-
-      this.classroom_item = []
-      this.room = null
-
-      this.classroomStore.fetchClassroomInBuilding(newVal.id).then(res => {
-        this.classroom_item = res
-      }).catch(err => {
-        console.error("Cannot fetch classrooms data: " + err.message)
-      })
-
-      this.reservationStore.fetchFromBuilding(newVal.id, {
-        minReserveTime: this.startTime,
-        maxReserveTime: this.finishTime
-      }).then(res => {
-        this.reservations = res
-      }).catch(err => {
-        console.error("Cannot fetch reservations: " + err.message)
-      })
-
-
+    recentlyFilter() {
+      this.fetchUserReservation();
     },
 
-    room(newVal) {
-
-      if (!newVal) return
-
-      this.reservationStore.fetchFromClassroom(newVal.id, {
-        minReserveTime: this.startTime,
-        maxReserveTime: this.finishTime
-      }).then(res => {
-        this.reservations = res
-      }).catch(err => {
-        console.error("Cannot fetch reservations: " + err.message)
-      })
-
-    }
+    statusFilter() {
+      this.fetchUserReservation();
+    },
   },
 
   methods: {
     fetchUserReservation() {
+      let token = localStorage.getItem("cookie");
 
-      this.userReservations = []
+      if (!token) {
+        window.location.href = "/";
+      }
 
-      let token = localStorage.getItem("cookie")
-      if (!token) return
+      this.loading = true;
 
-      this.loading = true
-      this.reservationStore.fetchUserReserved(token).then(res => {
-        console.log(res)
-        this.userReservations = res
-        this.loading = false
-      }).catch(err => {
-        console.error(err)
-        this.userReservations = []
-        this.loading = false
-      })
+      // check logged in user first
+      this.userStore
+        .fetchCurrentUser(token)
+        .then(() => {
+          this.userReservations = [];
+
+          let now = new Date();
+          let dateFilterMin = null;
+          let dateFilterMax = null;
+
+          switch (this.recentlyFilter) {
+            case "now":
+              dateFilterMin = now.toISOString();
+              break;
+            case "past":
+              dateFilterMax = now.toISOString();
+              break;
+            case "all":
+              break;
+          }
+
+          let fetchParams = {
+            status: this.statusFilter != "all" ? this.statusFilter : null,
+            minReserveTime: dateFilterMin,
+            maxReserveTime: dateFilterMax,
+          };
+
+          // fetch all user reservation
+          this.reservationStore
+            .fetchUserReserved(token, fetchParams)
+            .then((res) => {
+              console.log(res);
+              this.userReservations = res;
+              this.userReservations.sort((a, b) => {
+                if (a.startTime < b.startTime) return -1;
+                if (a.startTime > b.startTime) return 1;
+                return 0;
+              });
+              this.loading = false;
+            })
+            .catch((err) => {
+              console.error(err);
+              this.userReservations = [];
+              this.loading = false;
+            });
+        })
+        .catch(() => {
+          window.location.href = "/";
+        });
     },
 
     selectDate(startTime, finishTime) {
-
-      this.startTime = startTime
-      this.finishTime = finishTime
-
-      console.log(startTime, finishTime)
-
-      let params = {
-        minReserveTime: this.startTime,
-        maxReserveTime: this.finishTime
-      }
-
-      if (this.room) {
-
-        this.reservationStore.fetchFromClassroom(this.room.id, params).then(res => {
-          this.reservations = res
-        }).catch(err => {
-          console.error("Failed to fetch reservations: " + err)
-        })
-
-      } else if (this.building) {
-
-        this.reservationStore.fetchFromBuilding(this.building.id, params).then(res => {
-          this.reservations = res
-        }).catch(err => {
-          console.error("Failed to fetch reservations: " + err)
-        })
-
-      } else {
-
-        this.reservationStore.fetchAll(params).then(res => {
-          this.reservations = res
-          this.fetchUserReservation()
-        }).catch(err => {
-          console.error("Failed to fetch reservations: " + err)
-        })
-
-      }
+      this.startTime = startTime;
+      this.finishTime = finishTime;
+      this.fetchUserReservation();
     },
 
     displayTime() {
-      if (!this.startTime || !this.finishTime) return "กรุณาเลือกวันที่"
+      if (!this.startTime || !this.finishTime) return "กรุณาเลือกวันที่";
 
-      var startTime = new Date(this.startTime.toISOString())
-      var finishTime = new Date(this.finishTime.toISOString())
-      finishTime.setDate(finishTime.getDate() - 1)
+      var startTime = new Date(this.startTime.toISOString());
+      var finishTime = new Date(this.finishTime.toISOString());
+      finishTime.setDate(finishTime.getDate() - 1);
 
-      let locale = "th-TH"
+      let locale = "th-TH";
       let format = {
         year: "numeric",
         month: "short",
-        day: "numeric"
-      }
+        day: "numeric",
+      };
 
       if (startTime.getDate() == finishTime.getDate())
-        return startTime.toLocaleDateString(locale, format)
+        return startTime.toLocaleDateString(locale, format);
       else
-        return startTime.toLocaleDateString(locale, format) + " - " + finishTime.toLocaleDateString(locale, format)
+        return (
+          startTime.toLocaleDateString(locale, format) +
+          " - " +
+          finishTime.toLocaleDateString(locale, format)
+        );
     },
 
     deleteReservation(reservationId) {
-			let token = localStorage.getItem("cookie")
-			this.reservationStore.deleteReservation(token, reservationId).then(() => {
-				console.log("delete success")
-        this.fetchUserReservation()
-			}).catch(err => {
-				console.log("delete failed")
-				console.log(err)
-			})
-		}
+      let token = localStorage.getItem("cookie");
+      this.reservationStore
+        .deleteReservation(token, reservationId)
+        .then(() => {
+          console.log("delete success");
+          this.fetchUserReservation();
+        })
+        .catch((err) => {
+          console.log("delete failed");
+          console.log(err);
+        });
+    },
   },
 
   setup() {
     return {
       reservationStore: useReservationStore(),
       buildingStore: useBuildingStore(),
-      classroomStore: useClassroomStore()
-    }
+      classroomStore: useClassroomStore(),
+      userStore: useUserStore(),
+    };
   },
 
-  name: 'History',
+  name: "History",
 
   components: {
     ClassroomCard,
@@ -207,27 +222,8 @@ export default {
   },
 
   mounted() {
-
-    let token = localStorage.getItem("cookie")
-
-    if (!token) return
-
-    this.reservationStore.fetchUserReserved(token).then(res => {
-        this.userReservations = res
-        this.loading = false
-      }).catch(err => {
-        console.error(err)
-        this.userReservations = []
-        this.loading = false
-      })
-
-    this.buildingStore.fetchAll().then(res => {
-      this.building_item = res
-    }).catch(err => {
-      console.error(err)
-      this.building_item = []
-    })
-  }
+    this.fetchUserReservation();
+  },
 };
 </script>
   

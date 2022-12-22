@@ -2,12 +2,10 @@
     <div class="mx-15 my-15">
         <v-form ref="form" v-model="valid" lazy-validation>
             <div class="text-h6 mb-5"> Login </div>
-            <v-text-field v-model="email" :counter="10" :rules="emailRules" label="E-mail" required @keyup.enter="validate"></v-text-field>
+            <v-text-field v-model="email" :rules="emailRules" label="E-mail" required @keyup.enter="validate"></v-text-field>
 
             <v-text-field v-model="password" :rules="passwordRules" label="Password" type="password"
                 required @keyup.enter="validate"></v-text-field>
-
-            <v-checkbox v-model="checkbox" label="Remember?" required></v-checkbox>
 
             <v-btn color="success" class="mr-4" @click="validate">
                 Login
@@ -61,7 +59,7 @@ export default {
         email: '',
         emailRules: [
             v => !!v || 'กรุณากรอก E-mail',
-            // v => /.+@.+\..+/.test(v) || 'กรุณากรอกให้ถูกต้อง',
+            v => /.+@.+\..+/.test(v) || 'กรุณากรอก E-mail ให้ถูกลักษณะ',
         ],
         password: '',
         passwordRules: [

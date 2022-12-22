@@ -39,34 +39,30 @@ export const useReservationStore = defineStore('reservations', () => {
   }
 
   async function fetchUserReserved(token, params) {
-
     let user = await userStore.fetchCurrentUser(token)
-    if (!user) return []
-
-    let headers = userStore.addBearerAuthHeader({}, token)
-    let res = await axios.get('/users/' + user.id + '/reservations', { headers, params })
+    let options = { params } 
+    let res = await axios.get('/users/' + user.id + '/reservations', options)
     return res.data
-
   }
 
-  async function reserve(token, roomId, startTime, finishTime) {
-    let headers = userStore.addBearerAuthHeader({}, token)
-    await axios.post('/reservations', { roomId, startTime, finishTime }, { headers })
+  async function reserve(token, roomId, startTime, finishTime, reserveNote) {
+    let options = userStore.addBearerAuth(token, {}) 
+    await axios.post('/reservations', { roomId, startTime, finishTime, reserveNote }, options)
   }
 
-  async function approve(token, reservationId) {
-    let headers = userStore.addBearerAuthHeader({}, token)
-    await axios.post(`/reservations/${reservationId}/approve`, {}, { headers })
+  async function approve(token, reservationId, reason) {
+    let options = userStore.addBearerAuth(token, {}) 
+    await axios.post(`/reservations/${reservationId}/approve`, { reason }, options)
   }
 
-  async function reject(token, reservationId) {
-    let headers = userStore.addBearerAuthHeader({}, token)
-    await axios.post(`/reservations/${reservationId}/reject`, {}, { headers })
+  async function reject(token, reservationId, reason) {
+    let options = userStore.addBearerAuth(token, {}) 
+    await axios.post(`/reservations/${reservationId}/reject`, { reason }, options)
   }
 
   async function deleteReservation(token, reservationId) {
-    let headers = userStore.addBearerAuthHeader({}, token)
-    await axios.delete(`/reservations/${reservationId}`, { headers })
+    let options = userStore.addBearerAuth(token, {}) 
+    await axios.delete(`/reservations/${reservationId}`, options)
   }
 
   return { fetchAll, fetchFromBuilding, fetchFromClassroom, fetchById, fetchUserReserved, reserve, approve, reject, deleteReservation }

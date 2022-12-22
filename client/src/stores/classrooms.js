@@ -19,24 +19,25 @@ export const useClassroomStore = defineStore('classrooms', () => {
 		return res.data
 	}
   
-	async function checkIsRoomAvailable(roomId, startTime, finishTime) {
+	async function checkIsRoomAvailable(token, roomId, startTime, finishTime) {
 
-		let res = await axios.get('/classrooms/' + roomId + "/availability", {
-			params: {
-				startTime, 
-				finishTime
-			}
-		})
+		let options = { params: { startTime, finishTime } }
 
-		console.log(res)
-
+		try {
+			// validate token
+			await userStore.fetchCurrentUser(token)
+			options = userStore.addBearerAuth(token, { params: { startTime, finishTime } })
+		} catch (e) { }
+		
+		let res = await axios.get('/classrooms/' + roomId + "/availability", options)
 		return res.data.available
+
 	}
 
 	async function updateClassroom(token, roomId, seats, isReady) {
-		let headers = userStore.addBearerAuthHeader({}, token)
+		let options = userStore.addBearerAuth(token, {})
 		let status = isReady === undefined ? undefined : isReady ? "ready" : "unready"
-		await axios.post('/classrooms/' + roomId, { seats, status }, { headers })
+		await axios.post('/classrooms/' + roomId, { seats, status }, options)
 	}
 
 	return { classrooms, fetchAll, fetchClassroomInBuilding, checkIsRoomAvailable, updateClassroom }

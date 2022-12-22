@@ -1,5 +1,5 @@
 <template>
-    <div class="text-center">
+    <div class="">
         <v-dialog v-model="classroomEditDialog">
             <template v-slot:activator="{ props }">
                 <v-btn class="bg-orange" color="white" v-bind="props">

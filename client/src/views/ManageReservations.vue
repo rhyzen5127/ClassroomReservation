@@ -9,7 +9,7 @@
           <ClassroomCard 
             :reservation="i"
             :width="700" class="my-5"
-            showOwner managable 
+            showOwner managable showReserveNote
             @approve="approveReservation(i.id)" 
             @reject="rejectReservation(i.id)" 
             />
