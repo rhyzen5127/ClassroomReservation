@@ -1,15 +1,19 @@
 <template>
   <v-row class="ma-0">
+    <v-col cols="12" md="5">
+      <EventCalendar @dateSelected="selectDate" width="650" class="mt-5" />
+      <!-- <div class="text-center ma-5">
+        <v-btn color="orange"> นำออกรายการ </v-btn>
+      </div> -->
+    </v-col>
     <v-col cols="12" md="7">
-      <EventCalendar @dateSelected="selectDate" width="600" class="mt-5" />
-      <h2 class="mb-2">เลือกดูห้องเรียนตามวันที่</h2>
       <v-card>
-        <v-card color="orange" class="pa-2 mb-5">
+        <v-card color="orange" class="pa-2 mb-2">
           <v-icon icon="mdi-filter"></v-icon>
-          ตัวกรองส์
+          ตัวกรอง
         </v-card>
 
-        <div class="text-h6 mx-5 mb-3">วันที่ {{ displayTime() }}</div>
+        <div class="text-h6 mx-5 mb-2">วันที่ {{ displayTime() }}</div>
 
         <v-select
           v-model="building"
@@ -19,7 +23,7 @@
           item-value="id"
           persistence-hint
           return-object
-          class="mx-5"
+          class="mx-5 my-1"
         >
         </v-select>
 
@@ -31,36 +35,55 @@
           item-title="name"
           item-value="id"
           return-object
-          class="mx-5"
+          class="mx-5 my-1"
         >
         </v-select>
       </v-card>
-      <v-card class="overflow-y-auto" max-height="380">
-        <div v-for="i in reservations" :key="i.id" class="my-4">
+      <v-card class="overflow-y-auto" max-height="314">
+        <div v-for="i in reservations" :key="i.id" class="my-1">
           <ClassroomCard
+            class="my-5"
             :reservation="i"
             :width="648.91"
-            class="my-5"
             showOwner
+            selectable
+            :cardSelected="isReservationSelected(i)"
+            @click="onSelectReservation(i)"
           />
         </div>
       </v-card>
-      <div class="text-center ma-5">
-        <v-btn color="orange"> นำออกรายการ </v-btn>
+    </v-col>
+    <div>
+      <v-card class="text-center mx-3" color="orange">
+        รายละเอียดการนำนอกการจอง
+      </v-card>
+      <v-card
+        width="1600"
+        class="mx-3 pa-2 overflow-y-auto"
+        max-height="240"
+        height="240"
+        box-shadow="5"
+      >
+        <ClassroomReportTable/>
+      </v-card>
+      <div class="d-flex justify-end mr-7 mt-2">
+
+        <v-btn color="green" class="mx-2"> นำออก </v-btn>
+
+        <v-btn color="red" class="mx-2"> รีเซ็ต </v-btn>
       </div>
-    </v-col>
-    <v-col cols="12" md="5">
-      
-    </v-col>
+    </div>
   </v-row>
 </template>
   
-  <script>
+<script>
 import ClassroomCard from "@/components/ClassroomCard.vue";
 import EventCalendar from "@/components/EventCalendar.vue";
+import ClassroomReportTable from "@/components/ClassroomReportTable.vue";
 import { useReservationStore } from "@/stores/reservations.js";
 import { useBuildingStore } from "@/stores/buildings.js";
 import { useClassroomStore } from "@/stores/classrooms.js";
+import { tr } from "date-fns/locale";
 
 export default {
   name: "report",
@@ -68,22 +91,27 @@ export default {
   components: {
     EventCalendar,
     ClassroomCard,
+    ClassroomReportTable,
   },
 
   data() {
     return {
       reservations: [],
-      building: null,
       building_item: [],
-      room: null,
       classroom_item: [],
+
+      selReservations: {},
+      building: null,
+      room: null,
+      startTime: null,
+      finishTime: null,
+
       bannerPath: new URL(
         "@/assets/images/home-banner-background.png",
         import.meta.url
       ).href,
+
       tel: null,
-      startTime: null,
-      finishTime: null,
     };
   },
 
@@ -130,33 +158,85 @@ export default {
           .fetchFromClassroom(this.room.id, params)
           .then((res) => {
             this.reservations = res;
+            this.sortReservationSelection()
           })
           .catch((err) => {
             console.error("Failed to fetch reservations: " + err);
           });
-      } else if (this.building) {
+      } 
+      else if (this.building) {
         this.reservationStore
           .fetchFromBuilding(this.building.id, params)
           .then((res) => {
             this.reservations = res;
+            this.sortReservationSelection()
           })
           .catch((err) => {
             console.error("Failed to fetch reservations: " + err);
           });
-      } else {
+      } 
+      else {
         this.reservationStore
           .fetchAll(params)
           .then((res) => {
             this.reservations = res;
+            this.sortReservationSelection()
           })
           .catch((err) => {
             console.error("Failed to fetch reservations: " + err);
           });
       }
     },
+
+    selectAllPresentReservations() {
+      this.reservations.forEach(r => {
+        this.selReservations[r.id] = reservation
+      })
+    },
+
+    deselectAllPresentReservations() {
+      this.reservations.forEach(r => {
+        this.selReservations[r.id] = undefined
+      })
+    },
+
+    selectAllPresentReservations() {
+      for (let reservation in this.reservations) {
+        this.selReservations[reservation.id] = reservation
+      }
+    },
+
+    onSelectReservation(reservation) {
+      if (this.isReservationSelected(reservation)) {
+        this.selReservations[reservation.id] = undefined
+      } else {
+        this.selReservations[reservation.id] = reservation
+      }
+    },
+
+    isReservationSelected(reservation) {
+      return this.selReservations[reservation.id] ? true : false
+    },
+
+    sortReservationSelection() {
+        this.reservations.sort((r1, r2) => {
+        let r1s = this.isReservationSelected(r1)
+        let r2s = this.isReservationSelected(r2)
+        if (r1s === r2s) {
+          // sort normally
+          return 0
+        }
+        if (r1s) {
+          return -1
+        }
+        return 1
+     })
+    }
+
   },
 
   watch: {
+
     building(newVal) {
       if (!newVal) return;
 

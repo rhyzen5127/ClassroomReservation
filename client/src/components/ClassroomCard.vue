@@ -1,16 +1,14 @@
 <template>
-  <div>
-    <v-card :width="width" variant="">
+    <v-card :class="selectable && cardSelected ? 'bg-orange-lighten-4' : 'bg-white'">
       <v-row>
-        <v-col class="pa-0" cols="12" md="4">
+        <v-col cols="12" md="3" class="d-flex">
           <v-img
             src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
             :aspect-ratio="1"
             cover
-          >
-          </v-img>
+          />
         </v-col>
-        <v-col cols="12" md="8">
+        <v-col cols="12" md="9">
           <div class="text-overline mb-1">
             {{ roomUseDate }} : {{ roomUseTime }}
           </div>
@@ -23,11 +21,11 @@
             {{ buildingName }}
           </div>
 
-          <div class="text-caption">
+          <div class="text-caption" v-if="showSize">
             {{ classroomSize }}
           </div>
 
-          <div class="text-caption">
+          <div class="text-caption" v-if="showSeat">
             {{ classroomSeats }}
           </div>
 
@@ -48,15 +46,13 @@
             </div>
           </div>
 
-          <div v-if="showStatus"
+          <div
+            v-if="showStatus"
             :class="'mt-3 h6 text-caption mr-5 ' + reservationStatusColor"
           >
             {{ reservationStatus }}
-            <div v-if="isRejected">
-              สาเหตุ: {{ reservationStatusNote }}
-            </div>
+            <div v-if="isRejected">สาเหตุ: {{ reservationStatusNote }}</div>
           </div>
-
 
           <div class="d-flex mx-auto justify-end">
             <div v-if="editable" class="mx-5">
@@ -88,7 +84,6 @@
         </v-col>
       </v-row>
     </v-card>
-  </div>
 </template>
 
 <!-- Parameter = Building, Name, Date, Time, Picture, Status -->
@@ -108,17 +103,21 @@ export default {
     showOwner: { type: Boolean, require: false, default: false },
     showStatus: { type: Boolean, require: false, dafault: false },
     showReserveNote: { type: Boolean, require: false, dafault: true },
+    showSize: { type: Boolean, require: false, dafault: true },
+    showSeat: { type: Boolean, require: false, default: true},
 
     // control options
     editable: { type: Boolean, require: false, default: false },
     managable: { type: Boolean, require: false, default: false },
     deleteable: { type: Boolean, require: false, dafault: false },
+    selectable: { type: Boolean, require: false, dafault: false },
 
     // miscellaneous
     width: { type: Number, require: false, default: 700 },
+    cardSelected: { type: Boolean, require: false, default: false }
   },
 
-  emits: ["approve", "reject", "delete"],
+  emits: ["approve", "reject", "delete", "selected", "unselected"],
 
   methods: {},
 
@@ -137,7 +136,7 @@ export default {
         minute: "numeric",
       },
       locale: "th-TH",
-    },
+    }
   }),
 
   computed: {
@@ -261,13 +260,13 @@ export default {
     reservationNote() {
       let defaultValue = "(ไม่ระบุ)";
       if (!this.reservation) return defaultValue;
-      return this.reservation.reserveNote || defaultValue
+      return this.reservation.reserveNote || defaultValue;
     },
 
     reservationStatusNote() {
       let defaultValue = "(ไม่ระบุ)";
       if (!this.reservation) return defaultValue;
-      return this.reservation.approveNote || defaultValue
+      return this.reservation.approveNote || defaultValue;
     },
 
     isRejected() {
@@ -280,6 +279,6 @@ export default {
 
   beforeMount() {},
 
-  mounted() {},
+  mounted() { console.log(this.selectable, this.cardSelected)},
 };
 </script>
