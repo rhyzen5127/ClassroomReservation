@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="this.isLoggedIn">
-      <v-btn height="80" color="white" @click="this.logout">
+      <v-btn height="80" color="white" @click="logout">
         <v-list-item :title="splitTitle()" subtitle="Logout"/>
 
         <v-avatar color="red">
@@ -23,7 +23,6 @@
 </template>
 
 <script>
-import { onMounted } from 'vue';
 
 export default {
   props: {
@@ -42,7 +41,6 @@ export default {
   methods: {
     logout() {
       localStorage.removeItem("cookie");
-      this.loading = false
       window.location.href = '/'
     },
 

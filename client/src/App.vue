@@ -4,7 +4,7 @@
       <NavBar :title="title" :isLoggedIn="isLoggedIn" />
       <SideBar :title="title" :email="email" :role="role" :isLoggedIn="isLoggedIn" />
 
-      <router-view />
+      <router-view :key="$route.path" />
     </v-main>
   </v-app>
 </template>
@@ -40,28 +40,34 @@ export default {
   },
 
   methods: {
+
     fetchUserData() {
 
       this.isLoggedIn = false
 
       let userToken = localStorage.getItem("cookie")
+
       if (userToken) {
-        this.userStore.fetchCurrentUser(userToken).then(res => {
+
+        this.userStore.fetchCurrentUser(userToken)
+        .then(res => {
           this.title = res.firstName + " " + res.lastName
           this.email = res.email
           this.role = res.role
           this.isLoggedIn = true
-        }).catch(err => {
-          localStorage.removeItem("cookie")
-          console.error(err)
         })
+        .catch(() => {
+          localStorage.removeItem("cookie")
+        })
+
       }
       
     }
+
   },
 
   mounted() {
-    this.fetchUserData();
+    this.fetchUserData()
   }
 }
 </script>

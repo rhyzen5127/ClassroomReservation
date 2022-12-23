@@ -50,8 +50,9 @@
 
 
 <script>
-import axios from 'axios'
+
 import { useUserStore } from '@/stores/users.js'
+
 export default {
     name: 'Login',
     data: () => ({
@@ -73,8 +74,8 @@ export default {
 
     methods: {
         loginAsStaffTest(){
-            this.email = 'admin'
-            this.password = 'voraphat'
+            this.email = 'staff@gmail.com'
+            this.password = '1234'
             this.loginHandler()
         },
 
@@ -92,26 +93,30 @@ export default {
             if (valid) this.loginHandler()
             else alert('Something Wrong.')
         },
+
         reset() {
             this.$refs.form.reset()
         },
+
         resetValidation() {
             this.$refs.form.resetValidation()
         },
+
         loginHandler() {
             this.loading = true
             this.userStore.login(this.email, this.password).then((res) => {
                 console.log("RES::: ", res);
                 localStorage.setItem("cookie", res)
+                this.loading = false
                 // REDIRECT to HOME
-
                 window.location.href = '/'
-            }).catch(err => {
-                localStorage.setItem("cookie", null)
+            }).catch(() => {
+                localStorage.removeItem("cookie")
                 this.loading = false
                 this.authFailDialog = true
             })
         },
+
     },
 
     setup() {

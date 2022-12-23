@@ -1,7 +1,3 @@
-<script setup>
-import NavBarAccount from './icons/NavBarAccount.vue';
-</script>
-
 <template>
   
   <div>
@@ -24,12 +20,18 @@ import NavBarAccount from './icons/NavBarAccount.vue';
 
     </v-app-bar>
 
+    <!--
     <v-navigation-drawer v-model="drawer" location="bottom" temporary>
       <v-list :items="items"/>
     </v-navigation-drawer>
+    -->
   </div>
 </template>
+
 <script>
+
+import NavBarAccount from './icons/NavBarAccount.vue';
+
 export default {
   props: {
     title: {
@@ -44,13 +46,17 @@ export default {
     }
   },
 
+  components: {
+    NavBarAccount
+  },
+
   data: () => ({
     logoPath: new URL("@/assets/images/sci-kmitl-logo.png", import.meta.url).href,
   }),
 
   methods: {
     onClickRedirect2Home() {
-      this.$router.push({ name: 'home' })
+      window.location.href = '/'
     }
   }
 }

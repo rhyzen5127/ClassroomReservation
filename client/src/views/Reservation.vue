@@ -60,12 +60,6 @@
       </v-col>
     </v-row>
 
-    <v-card class="mt-5" :color="roomStatusColor">
-      <div class="text-center">
-        {{ roomStatus }}
-      </div>
-    </v-card>
-
     <v-textarea
       v-if="isLoggedIn"
       clearable
@@ -74,10 +68,15 @@
       @input="inputReserveNote"
       :color="detailField.length > 300 ? 'red' : 'green'"
       class="mt-10"
-      :disabled="!isLoggedIn || !inputValid"
       prepend-icon="mdi-book"
       :hint="(300 - detailField.length).toString() + ' / 300'"
     />
+
+    <v-card class="mt-5" :color="roomStatusColor">
+      <div class="text-center">
+        {{ roomStatus }}
+      </div>
+    </v-card>
 
     <v-btn
       v-if="isLoggedIn"
@@ -278,10 +277,10 @@ export default defineComponent({
 
     inputReserveNote(event) {
       let newValue = event.target.value
-      if (newValue && newValue.length <= 300) {
-        this.detailField = event.target.value
-        console.log(this.detailField)
-      }
+      if (newValue && newValue.length > 300)
+        this.detailField = newValue.substring(0, 300)
+      else
+        this.detailField = newValue
     },
 
     testDisplayStatus() {

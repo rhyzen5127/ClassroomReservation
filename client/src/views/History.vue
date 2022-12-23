@@ -104,7 +104,7 @@ export default {
       let token = localStorage.getItem("cookie");
 
       if (!token) {
-        window.location.href = "/";
+        window.location.href = '/';
       }
 
       this.loading = true;
@@ -156,7 +156,7 @@ export default {
             });
         })
         .catch(() => {
-          window.location.href = "/";
+          window.location.href = '/';
         });
     },
 

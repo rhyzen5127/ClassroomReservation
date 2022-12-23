@@ -1,14 +1,12 @@
 <template>
   <v-row class="ma-0">
     <v-col cols="12" md="7">
-      <EventCalendar @dateSelected="selectDate" width="860" class="mt-5" />
-    </v-col>
-    <v-col cols="12" md="5">
+      <EventCalendar @dateSelected="selectDate" width="600" class="mt-5" />
       <h2 class="mb-2">เลือกดูห้องเรียนตามวันที่</h2>
       <v-card>
         <v-card color="orange" class="pa-2 mb-5">
           <v-icon icon="mdi-filter"></v-icon>
-          ตัวกรอง
+          ตัวกรองส์
         </v-card>
 
         <div class="text-h6 mx-5 mb-3">วันที่ {{ displayTime() }}</div>
@@ -50,6 +48,9 @@
       <div class="text-center ma-5">
         <v-btn color="orange"> นำออกรายการ </v-btn>
       </div>
+    </v-col>
+    <v-col cols="12" md="5">
+      
     </v-col>
   </v-row>
 </template>

@@ -267,7 +267,7 @@ export default {
     reservationStatusNote() {
       let defaultValue = "(ไม่ระบุ)";
       if (!this.reservation) return defaultValue;
-      return this.reservation.statusNote || defaultValue
+      return this.reservation.approveNote || defaultValue
     },
 
     isRejected() {
