@@ -1,5 +1,6 @@
 package org.catcom.classreserver.form;
 
+import jakarta.annotation.Nullable;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.ToString;
@@ -18,5 +19,8 @@ public class ReserveForm
 
     @NonNull
     private ZonedDateTime finishTime;
+
+    @Nullable
+    private String reserveNote;
 
 }

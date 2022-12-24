@@ -1,24 +1,32 @@
 package org.catcom.classreserver.controller;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.opencsv.CSVWriter;
 import org.catcom.classreserver.exceptions.ClassroomException;
 import org.catcom.classreserver.exceptions.reservations.ReservationException;
+import org.catcom.classreserver.form.ApproveReservationForm;
 import org.catcom.classreserver.form.EditReservationForm;
 import org.catcom.classreserver.form.ReserveForm;
 import org.catcom.classreserver.model.building.BuildingRepos;
 import org.catcom.classreserver.model.reservation.Reservation;
+import org.catcom.classreserver.model.reservation.ReservationRepos;
 import org.catcom.classreserver.model.reservation.ReservationStatus;
-import org.catcom.classreserver.model.user.User;
 import org.catcom.classreserver.service.UserDetailService;
 import org.catcom.classreserver.model.user.UserRole;
 import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -38,6 +46,8 @@ public class ReservationController
     private ClassroomService classroomService;
     @Autowired
     private BuildingRepos buildingRepos;
+    @Autowired
+    private ReservationRepos reservationRepos;
 
     // GET reservation by id
     @GetMapping("/reservations/{id}")
@@ -64,7 +74,7 @@ public class ReservationController
     )
     {
         var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
-        var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+        var maxLocalReserveTime = maxReserveTime == null ? null : maxReserveTime.toLocalDateTime();
 
         return reservationService.findReservations(
                 null,
@@ -92,7 +102,7 @@ public class ReservationController
             var room = classroomService.findRoom(roomId);
 
             var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
-            var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+            var maxLocalReserveTime = maxReserveTime == null ? null : maxReserveTime.toLocalDateTime();
 
             return reservationService.findReservations(
                     null,
@@ -127,7 +137,7 @@ public class ReservationController
             var user = userDetailService.loadUserById(userId).getUser();
 
             var minLocalReserveTime = minReserveTime == null ? null : minReserveTime.toLocalDateTime();
-            var maxLocalReserveTime = minReserveTime == null ? null : maxReserveTime.toLocalDateTime();
+            var maxLocalReserveTime = maxReserveTime == null ? null : maxReserveTime.toLocalDateTime();
 
             return reservationService.findReservations(
                     user,
@@ -192,7 +202,7 @@ public class ReservationController
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null)
         {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         try
@@ -209,7 +219,8 @@ public class ReservationController
                     reserveRoom,
                     doReserveTime,
                     startTime,
-                    finishTime
+                    finishTime,
+                    form.getReserveNote()
             );
 
         }
@@ -222,19 +233,26 @@ public class ReservationController
 
     @GetMapping("/classrooms/{roomId}/availability")
     @ResponseBody Map<String, Boolean> checkScheduleAvailability(
+            Authentication auth,
             @PathVariable Integer roomId,
             @RequestParam ZonedDateTime startTime,
             @RequestParam ZonedDateTime finishTime
     )
     {
+        // Note: user maybe null
+        var userDetail = userDetailService.loadByAuthentication(auth);
+
         try
         {
 
             var room = classroomService.findRoom(roomId);
+            var startTimeLocal = startTime.toLocalDateTime();
+            var finishTimeLocal = finishTime.toLocalDateTime();
 
-            var roomAvailable = reservationService.isRoomAvailableAtGivenSchedule(room, startTime.toLocalDateTime(), finishTime.toLocalDateTime());
+            var roomAvailable = !reservationService.isRoomHasOverlapSchedule(room, startTimeLocal, finishTimeLocal);
+            var userAvailable = userDetail == null || !reservationService.isUserHasOverlapSchedule(userDetail.getUser(), room, startTimeLocal, finishTimeLocal);
 
-            return Map.of( "available", roomAvailable );
+            return Map.of( "available", roomAvailable && userAvailable );
 
         }
         catch (ClassroomException e)
@@ -255,7 +273,7 @@ public class ReservationController
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null)
         {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         try
@@ -284,7 +302,8 @@ public class ReservationController
                     id,
                     newReservedRoom,
                     newStartTime,
-                    newFininshTime
+                    newFininshTime,
+                    form.getReserveNote()
             );
 
         }
@@ -298,32 +317,51 @@ public class ReservationController
 
     // POST approve reservation
     @PostMapping("/reservations/{id}/approve")
-    void approveReservation(Authentication auth, @PathVariable int id)
+    void approveReservation(Authentication auth, @PathVariable int id, ApproveReservationForm form)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null || !userDetail.isStaff())
         {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        reservationService.updateReservationStatus(id, ReservationStatus.APPROVED);
+        reservationService.updateReservationStatus(id, ReservationStatus.APPROVED, userDetail.getUser(), form.getReason());
     }
 
 
     // POST reject reservation
     @PostMapping("/reservations/{id}/reject")
-    void rejectReservation(Authentication auth, @PathVariable int id)
+    void rejectReservation(Authentication auth, @PathVariable int id, ApproveReservationForm form)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null || !userDetail.isStaff())
         {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        reservationService.updateReservationStatus(id, ReservationStatus.REJECTED);
+        reservationService.updateReservationStatus(id, ReservationStatus.REJECTED, userDetail.getUser(), form.getReason());
     }
+
+
+    // POST reject reservation
+    @PostMapping("/reservations/{id}/cancel")
+    void cancelReservation(Authentication auth, @PathVariable int id)
+    {
+        var userDetail = userDetailService.loadByAuthentication(auth);
+        if (userDetail == null)
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        var toCancel = reservationService.getReservation(id);
+        if (!toCancel.getOwner().equals(userDetail.getUser()))
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User can only cancel their own reservation");
+        }
+        reservationService.updateReservationStatus(id, ReservationStatus.CANCELED, userDetail.getUser(), null);
+    }
+
 
     // POST reject reservation
     @DeleteMapping("/reservations/{id}")
-    void deleterReservation(Authentication auth, @PathVariable int id)
+    void deleteReservation(Authentication auth, @PathVariable int id)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null)

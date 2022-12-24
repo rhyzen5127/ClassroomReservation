@@ -41,9 +41,26 @@ public class Reservation {
     @Getter @Setter
     private LocalDateTime finishTime; // time to finish using room
 
+    @Column(name = "reserve_note")
+    @Getter @Setter
+    private String reserveNote;
+
     @Column(name = "status", nullable = false)
     @Getter @Setter
     private String status; // ( pending | approved | rejected | canceled )
+
+    @ManyToOne()
+    @JoinColumn(name = "approver_id", referencedColumnName = "id")
+    @Getter @Setter
+    private User approver;
+
+    @Column(name = "approve_note")
+    @Getter @Setter
+    private String approveNote;
+
+    @Column(name = "approve_time")
+    @Getter @Setter
+    private LocalDateTime approveTime; // time to finish using room
 
     public boolean isPending()
     {

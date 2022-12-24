@@ -46,6 +46,10 @@ public class Classroom
     @Getter @Setter
     private Integer seats;
 
+    @Column(name = "note")
+    @Getter @Setter
+    private String note;
+
     @ManyToOne()
     @JoinColumn(name = "building_id", referencedColumnName = "id")
     @Getter @Setter

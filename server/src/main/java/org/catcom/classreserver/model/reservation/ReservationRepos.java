@@ -65,6 +65,16 @@ public interface ReservationRepos extends JpaRepository<Reservation, Integer>, J
         );
     }
 
+    static Specification<Reservation> approvedSince(LocalDateTime approvedTime)
+    {
+        return (r, cq, cb) -> cb.lessThanOrEqualTo(r.get("approveTime"), approvedTime);
+    }
+
+    static Specification<Reservation> roomUsedBefore(LocalDateTime useTime)
+    {
+        return (r, cq, cb) -> cb.lessThan(r.get("finishTime"), useTime);
+    }
+
     //static Specification<Reservation>
 
 }

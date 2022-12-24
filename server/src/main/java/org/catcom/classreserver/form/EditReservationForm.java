@@ -19,5 +19,7 @@ public class EditReservationForm
     @Nullable
     private ZonedDateTime finishTime;
 
+    @Nullable
+    private String reserveNote;
 
 }

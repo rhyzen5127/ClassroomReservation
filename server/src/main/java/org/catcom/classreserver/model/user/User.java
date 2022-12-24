@@ -56,4 +56,6 @@ public class User
         return this.role.equalsIgnoreCase("staff");
     }
 
+    public String getFullName() { return getFirstName() + " " + getLastName(); }
+
 }

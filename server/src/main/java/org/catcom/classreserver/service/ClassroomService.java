@@ -7,6 +7,7 @@ import org.catcom.classreserver.model.classroom.ClassroomRepos;
 import org.catcom.classreserver.model.reservation.Reservation;
 import org.catcom.classreserver.model.reservation.ReservationRepos;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,8 @@ public class ClassroomService
 
     public List<Classroom> getAllClassrooms()
     {
-        return classroomRepos.findAll();
+        var sort = Sort.by(Sort.Order.asc("name"));
+        return classroomRepos.findAll(sort);
     }
 
     public Classroom findRoom(int roomId) throws ClassroomException

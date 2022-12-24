@@ -103,7 +103,6 @@ public class WebSecurityConfig
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/current").authenticated()
                         .requestMatchers("/users").authenticated()
-                        .requestMatchers("/reservations").permitAll()
                         .anyRequest().permitAll()
                 )
 
