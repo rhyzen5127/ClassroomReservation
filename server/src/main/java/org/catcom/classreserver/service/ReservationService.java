@@ -18,12 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
-import static org.springframework.data.jpa.domain.Specification.not;
 import static org.catcom.classreserver.model.reservation.ReservationRepos.*;
 
 @Service
@@ -178,6 +179,8 @@ public class ReservationService
 
     }
 
+    private static final Duration MAX_CANCELABLE_DURATION = Duration.of(12, ChronoUnit.HOURS);
+
     // Update reservation status
     public void updateReservationStatus(
             int id,
@@ -189,18 +192,28 @@ public class ReservationService
 
         var reservation = getReservation(id);
 
-        validateStatus(reservation, status);
+        validateStatusChange(reservation, status);
+
+        var now = LocalDateTime.now();
 
         // additional check to ensure no approved schedule can be overlapped
         if (APPROVED.equalsIgnoreCase(status))
         {
             validateRoomSchedule(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime());
         }
+        else if (CANCELED.equalsIgnoreCase(status))
+        {
+            var duration = Duration.between(now, reservation.getBookingTime());
+            if (duration.compareTo(MAX_CANCELABLE_DURATION) > 0)
+            {
+                throw new ReservationException("Only reservation made withing 12 hours can be canceled.");
+            }
+        }
 
         reservation.setStatus(status);
         reservation.setApprover(updater);
         reservation.setApproveNote(statusNote);
-        reservation.setApproveTime(LocalDateTime.now());
+        reservation.setApproveTime(now);
 
         reservationRepos.save(reservation);
 
@@ -267,7 +280,7 @@ public class ReservationService
     }
 
 
-    // private static final Duration MIN_BOOKING_ADVANCE_DURATION = Duration.of(1, ChronoUnit.DAYS);
+    private static final Duration MIN_BOOKING_ADVANCE_DURATION = Duration.of(3, ChronoUnit.DAYS);
 
     private void validateBookingSchedule(LocalDateTime bookingTime, LocalDateTime startTime, LocalDateTime finishTime)
     {
@@ -276,12 +289,12 @@ public class ReservationService
             throw new ReservationException("Invalid reservation time range");
         }
 
-        //var duration = Duration.between(bookingTime, startTime);
+        var duration = Duration.between(bookingTime, startTime);
 
-        //if (duration.compareTo(MIN_BOOKING_ADVANCE_DURATION) < 0)
-        //{
-        //    throw new ReservationException("The reservation must be requested in advance for at least " + MIN_BOOKING_ADVANCE_DURATION);
-        //}
+        if (duration.compareTo(MIN_BOOKING_ADVANCE_DURATION) < 0)
+        {
+            throw new ReservationException("The reservation must be requested in advance for at least " + MIN_BOOKING_ADVANCE_DURATION);
+        }
     }
 
     void validateRoomSchedule(
@@ -307,7 +320,7 @@ public class ReservationService
         }
     }
 
-    void validateStatus(
+    void validateStatusChange(
             @NonNull Reservation reservation,
             @NonNull String newStatus
     ) throws ReservationException
@@ -319,9 +332,9 @@ public class ReservationService
             }
             case CANCELED ->
             {
-                if (reservation.isApproved() || reservation.isPending()) return;
+                if (reservation.isPending()) return;
 
-                throw new InvalidReservationStateException("Only accepted and pending reservation can be canceled");
+                throw new InvalidReservationStateException("Only pending reservation can be canceled");
             }
             case APPROVED, REJECTED ->
             {
