@@ -1,50 +1,46 @@
 <template>
+  <div class="text-h5 ma-10">ประวัติการจอง</div>
   <div class="mt-10 mx-10">
-    <v-row>
-      <v-col cols="12" md="6">
-        <div class="d-flex">
-          <v-select
-            v-model="recentlyFilter"
-            class="mx-2"
-            label="ตัวกรอง"
-            :items="group_options"
-            item-title="name"
-            item-value="id"
-          />
-          <v-select
-            v-model="statusFilter"
-            class="mx-2"
-            label="สถานะ"
-            :items="status_options"
-            item-title="name"
-            item-value="id"
-          />
-        </div>
-        <v-card class="overflow-y-auto" max-height="650">
-          <div
-            v-for="i in userReservations"
-            :key="i + '-classCard'"
-            class="my-4"
-          >
-            <v-card>
-              <ClassroomCard
-                :reservation="i"
-                :width="700"
-                class="my-5"
-                @delete="deleteReservation(i.id)"
-                showStatus
-                deleteable
-                showReserveNote
-              />
-            </v-card>
-          </div>
-        </v-card>
-      </v-col>
+    <!-- <v-row> -->
+    <!-- <v-col cols="12" md="6"> -->
+    <div class="d-flex">
+      <v-select
+        v-model="recentlyFilter"
+        class="mx-2"
+        label="ตัวกรอง"
+        :items="group_options"
+        item-title="name"
+        item-value="id"
+      />
+      <v-select
+        v-model="statusFilter"
+        class="mx-2"
+        label="สถานะ"
+        :items="status_options"
+        item-title="name"
+        item-value="id"
+      />
+    </div>
+    <div class="overflow-y-auto my-5" max-height="650">
+      <ClassroomCard
+        v-for="i in userReservations"
+        :key="i + '-classCard'"
+        class="my-4"
+        :reservation="i"
+        :width="700"
+        @cancel="cancelReservation(i.id)"
+        showStatus
+        deleteable
+        showReserveNote
+        showAutoDelete
+      />
+    </div>
+    <!-- </v-col> -->
 
-      <v-col cols="11" md="5" class="mt-10">
+    <!-- <v-col cols="11" md="5" class="mt-10">
         <EventCalendar :width="700" @dateSelected="selectDate" />
-      </v-col>
-    </v-row>
+      </v-col> -->
+    <!-- </v-row> -->
   </div>
 </template>
   
@@ -73,6 +69,7 @@ export default {
       { id: "pending", name: "รอการอนุมัติ" },
       { id: "approved", name: "อนุมัติแล้ว" },
       { id: "rejected", name: "ไม่อนุมัติ" },
+      { id: "canceled", name: "ที่ถูกยกเลิก" },
     ],
 
     room: null,
@@ -104,7 +101,7 @@ export default {
       let token = localStorage.getItem("cookie");
 
       if (!token) {
-        window.location.href = '/';
+        window.location.href = "/";
       }
 
       this.loading = true;
@@ -156,7 +153,7 @@ export default {
             });
         })
         .catch(() => {
-          window.location.href = '/';
+          window.location.href = "/";
         });
     },
 
@@ -190,16 +187,14 @@ export default {
         );
     },
 
-    deleteReservation(reservationId) {
+    cancelReservation(reservationId) {
       let token = localStorage.getItem("cookie");
       this.reservationStore
-        .deleteReservation(token, reservationId)
+        .cancel(token, reservationId)
         .then(() => {
-          console.log("delete success");
           this.fetchUserReservation();
         })
         .catch((err) => {
-          console.log("delete failed");
           console.log(err);
         });
     },

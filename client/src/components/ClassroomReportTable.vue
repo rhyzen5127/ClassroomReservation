@@ -1,35 +1,32 @@
 <template>
-  <v-table height="300px">
+  <v-table>
     <thead>
       <tr>
         <th class="text-middle">อาคาร</th>
         <th class="text-middle">ห้อง</th>
-        <th class="text-middle">ชั้น</th>
         <th class="text-middle">จองโดย</th>
         <th class="text-middle">อีเมล</th>
         <th class="text-middle">รายละเอียด</th>
         <th class="text-middle">วันที่</th>
         <th class="text-middle">เวลา</th>
-        <th class="text-middle">หมายเหตุ</th>
+        <th class="px-16 text-middle">หมายเหตุ</th>
         <th class="text-middle"></th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="item in classrooms" :key="item.name">
+      <tr v-for="i in schedules" :key="i.id">
 
-        <td>{{ item.building }}</td>
-        <td>{{ item.room }}</td>
-        <td>{{ item.floor }}</td>
-        <td>{{ item.owner }}</td>
-        <td>{{ item.email }}</td>
-        <td>{{ item.detail }}</td>
-        <td>{{ item.date }}</td>
-        <td>{{ item.time }}</td>
+        <td>{{ i.reservation.room.building.name }}</td>
+        <td>{{ i.reservation.room.name }}</td>
+        <td>{{ i.reservation.owner.firstName + " " + i.reservation.owner.lastName }}</td>
+        <td>{{ i.reservation.owner.email }}</td>
+        <td>{{ i.reservation.reserveNote || "-" }}</td>
+        <td>{{ formatDate(i.reservation.startTime) }}</td>
+        <td>{{ formatTimeRange(i.reservation.startTime, i.reservation.finishTime) }}</td>
         <td>
-          <v-btn icon="mdi-pencil" class="pa-0 mr-2" variant="" />
-          {{ item.note }}
+          <v-text-field v-model="i.note" />
         </td>
-        <td><v-btn color="red" icon="mdi-delete-outline"> </v-btn></td>
+        <td><v-btn color="red" icon="mdi-delete-outline" @click="$emit('delete-entry', i.reservation)"> </v-btn></td>
       </tr>
 
     </tbody>
@@ -39,11 +36,33 @@
 
   <script>
 export default {
+
+  props: {
+    schedules: {
+      type: Array,
+      required: false,
+      default: []
+    }
+  },
+
+  emits: [ 'delete-entry' ],
+
   data() {
     return {
       // config
-
-
+      dateFormat: {
+        dateOptions: {
+          year: "numeric",
+          month: "short",
+          weekday: "short",
+          day: "numeric",
+        },
+        timeOptions: {
+          hour: "numeric",
+          minute: "numeric",
+        },
+        locale: "th-TH",
+      },
       // data
       classrooms: [
         {
@@ -71,5 +90,38 @@ export default {
       ],
     };
   },
+
+  methods: {
+    formatDate(date) {
+      let d = new Date(date)
+      let locale = this.dateFormat.locale;
+      let options = this.dateFormat.dateOptions;
+      let minuteOffset = new Date().getTimezoneOffset();
+      d.setMinutes(d.getMinutes() - minuteOffset);
+
+      return d.toLocaleDateString(locale, options);
+    },
+
+    formatTimeRange(time1, time2) {
+      let d1 = new Date(time1)
+      let d2 = new Date(time2)
+      let locale = this.dateFormat.locale;
+      let options = this.dateFormat.timeOptions;
+      let minuteOffset = new Date().getTimezoneOffset();
+
+      d1.setMinutes(d1.getMinutes() - minuteOffset);
+      d2.setMinutes(d2.getMinutes() - minuteOffset);
+
+      return (
+        d1.toLocaleTimeString(locale, options) +
+        " น. - " +
+        d2.toLocaleTimeString(locale, options) +
+        " น."
+      )
+    }
+  },
+
+  mounted() {
+  }
 };
 </script>

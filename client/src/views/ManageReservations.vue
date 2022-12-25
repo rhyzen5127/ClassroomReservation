@@ -3,20 +3,17 @@
     <div class="text-h6 mb-1">
       จัดการคำขอจอง
     </div>
-    <!-- <v-card class="overflow-y-auto" max-height="650"> -->
+    <v-card class="overflow-y-auto" max-height="650" max-width="1200">
       <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
-        <v-card>
-          <ClassroomCard 
-            :reservation="i"
-            :width="700" class="my-5"
-            showOwner managable showReserveNote
-            @approve="approveReservation(i.id)" 
-            @reject="rejectReservation(i.id)" 
-            />
-                
-        </v-card>
+        <ClassroomCard 
+          :reservation="i"
+          :width="700" class="my-5"
+          showOwner managable showReserveNote
+          @approve="approveReservation"
+          @reject="rejectReservation"
+          />
       </div>
-    <!-- </v-card> -->
+    </v-card>
   </div>
 </template>
   
@@ -38,9 +35,8 @@ export default defineComponent({
   }),
 
   methods: {
-    fetchPendingReservation() {
 
-      var today = new Date()
+    fetchPendingReservation() {
 
       this.userReservations = []
       this.loading = true
@@ -57,9 +53,9 @@ export default defineComponent({
       })
     },
 
-    approveReservation(reservationId) {
+    approveReservation(reservationId, reason) {
       let token = localStorage.getItem('cookie')
-      this.reservationStore.approve(token, reservationId).then(res => {
+      this.reservationStore.approve(token, reservationId, reason).then(res => {
         alert("อนุมัติการจองสำเร็จ")
         this.fetchPendingReservation()
       }).catch(() => {
@@ -67,9 +63,9 @@ export default defineComponent({
       })
     },
 
-    rejectReservation(reservationId) {
+    rejectReservation(reservationId, reason) {
       let token = localStorage.getItem('cookie')
-      this.reservationStore.reject(token, reservationId).then(res => {
+      this.reservationStore.reject(token, reservationId, reason).then(res => {
         alert("ปฏิเสธการจองสำเร็จ")
         this.fetchPendingReservation()
       }).catch(() => {

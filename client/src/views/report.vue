@@ -48,7 +48,7 @@
             showOwner
             selectable
             :cardSelected="isReservationSelected(i)"
-            @click="onSelectReservation(i)"
+            @click="onSelectReservation(i, !isReservationSelected(i))"
           />
         </div>
       </v-card>
@@ -64,13 +64,13 @@
         height="240"
         box-shadow="5"
       >
-        <ClassroomReportTable/>
+        <ClassroomReportTable :schedules="reservationToExport" @delete-entry="(r) => onSelectReservation(r, false)" />
       </v-card>
       <div class="d-flex justify-end mr-7 mt-2">
 
-        <v-btn color="green" class="mx-2"> นำออก </v-btn>
+        <v-btn :disabled="reservationToExport.length == 0" color="green" class="mx-2" @click="exportReservationSchedules"> นำออก </v-btn>
 
-        <v-btn color="red" class="mx-2"> รีเซ็ต </v-btn>
+        <v-btn :disabled="reservationToExport.length == 0" color="red" class="mx-2" @click="deselectAllPresentReservations()"> รีเซ็ต </v-btn>
       </div>
     </div>
   </v-row>
@@ -83,10 +83,9 @@ import ClassroomReportTable from "@/components/ClassroomReportTable.vue";
 import { useReservationStore } from "@/stores/reservations.js";
 import { useBuildingStore } from "@/stores/buildings.js";
 import { useClassroomStore } from "@/stores/classrooms.js";
-import { tr } from "date-fns/locale";
 
 export default {
-  name: "report",
+  name: "Report",
 
   components: {
     EventCalendar,
@@ -100,6 +99,7 @@ export default {
       building_item: [],
       classroom_item: [],
 
+      reservationToExport: [],
       selReservations: {},
       building: null,
       room: null,
@@ -189,33 +189,26 @@ export default {
     },
 
     selectAllPresentReservations() {
-      this.reservations.forEach(r => {
-        this.selReservations[r.id] = reservation
-      })
+      this.reservations.forEach(r => this.onSelectReservation(r, true))
     },
 
     deselectAllPresentReservations() {
-      this.reservations.forEach(r => {
-        this.selReservations[r.id] = undefined
-      })
+      this.reservationToExport = []
+      //this.reservations.forEach(r => this.onSelectReservation(r, false))
     },
 
-    selectAllPresentReservations() {
-      for (let reservation in this.reservations) {
-        this.selReservations[reservation.id] = reservation
-      }
-    },
-
-    onSelectReservation(reservation) {
-      if (this.isReservationSelected(reservation)) {
-        this.selReservations[reservation.id] = undefined
+    onSelectReservation(reservation, selected) {
+      if (selected) {
+        this.reservationToExport.push({ id: reservation.id, reservation, note: "" })
+       // this.selReservations[reservation.id] = undefined
       } else {
-        this.selReservations[reservation.id] = reservation
+        this.reservationToExport = this.reservationToExport.filter(v => v.id != reservation.id)
+        //this.selReservations[reservation.id] = reservation
       }
     },
 
     isReservationSelected(reservation) {
-      return this.selReservations[reservation.id] ? true : false
+      return this.reservationToExport.find(v => v.id == reservation.id) ? true : false //this.selReservations[reservation.id] ? true : false
     },
 
     sortReservationSelection() {
@@ -231,6 +224,22 @@ export default {
         }
         return 1
      })
+    },
+
+    exportReservationSchedules()
+    {
+      this.reservationStore.exportPDF(this.reservationToExport.map(v => ({ id: parseInt(v.id), note: v.note })))
+      .then(res => {
+        var fileURL = window.URL.createObjectURL(new Blob([ res ], { type: "application/pdf"} ))
+        var fileLink = document.createElement('a')
+        fileLink.href = fileURL
+        fileLink.setAttribute('download', 'schedules.pdf')
+        document.body.appendChild(fileLink)
+        fileLink.click()
+      })
+      .catch(err => {
+        console.log(err)
+      })
     }
 
   },
@@ -294,6 +303,7 @@ export default {
         ? "กรุณาเลือกห้อง"
         : "กรุณาเลือกห้อง (กรุณาเลือกอาคารก่อน)";
     },
+
   },
 
   setup() {

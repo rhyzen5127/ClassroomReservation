@@ -1,89 +1,129 @@
 <template>
-    <v-card :class="selectable && cardSelected ? 'bg-orange-lighten-4' : 'bg-white'">
-      <v-row>
-        <v-col cols="12" md="3" class="d-flex">
-          <v-img
-            src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
-            :aspect-ratio="1"
-            cover
-          />
-        </v-col>
-        <v-col cols="12" md="9">
-          <div class="text-overline mb-1">
-            {{ roomUseDate }} : {{ roomUseTime }}
-          </div>
+  <v-card
+    :class="selectable && cardSelected ? 'bg-orange-lighten-4' : 'bg-white'"
+  >
+    <v-row>
+      <v-col cols="12" md="3" class="d-flex">
+        <v-img
+          src="https://storage.googleapis.com/inskru-optimized-image/-N2luZK8IiJoO1Qn1hfr:0.webp"
+          :aspect-ratio="1"
+          cover
+          height="200"
+        />
+      </v-col>
+      <v-col cols="12" :md="managable ? 4 : 9">
+        <div class="text-overline mb-1">
+          {{ roomUseDate }} : {{ roomUseTime }}
+        </div>
+        <div class="text-h6 mb-1">{{ classroomName }} {{ buildingName }}</div>
 
-          <div class="text-h6 mb-1">
-            {{ classroomName }}
-          </div>
+        <div class="text-caption"></div>
 
-          <div class="text-caption">
-            {{ buildingName }}
-          </div>
+        <div class="text-caption" v-if="showSize">
+          {{ classroomSize }}
+        </div>
 
-          <div class="text-caption" v-if="showSize">
-            {{ classroomSize }}
-          </div>
+        <div class="text-caption" v-if="showSeat">
+          {{ classroomSeats }}
+        </div>
 
-          <div class="text-caption" v-if="showSeat">
-            {{ classroomSeats }}
-          </div>
+        <div v-if="showOwner">
+          <h6 class="mt-3">
+            ผู้จอง: {{ ownerUserName }} ({{ ownerUserEmail }})
+          </h6>
+        </div>
 
-          <div v-if="showOwner">
-            <h6 class="mt-3">ผู้จอง:</h6>
-            <h6 class="mx-5">
-              {{ ownerUserName }}
-            </h6>
-            <h6 class="mx-5">
-              {{ ownerUserEmail }}
-            </h6>
+        <div class="mt-3 d-flex" v-if="showReserveNote">
+          <div class="text-caption">หมายเหตุ:</div>
+          <div class="text-caption mx-5">
+            {{ reservationNote }}
           </div>
+        </div>
 
-          <div v-if="showReserveNote">
-            <h6 class="mt-3">หมายเหตุในการจอง:</h6>
-            <div class="text-caption mx-5">
-              {{ reservationNote }}
-            </div>
-          </div>
-
-          <div
-            v-if="showStatus"
-            :class="'mt-3 h6 text-caption mr-5 ' + reservationStatusColor"
-          >
+        <div v-if="showStatus">
+          <v-chip :class="'h6 text-caption mr-5 ' + reservationStatusColor">
             {{ reservationStatus }}
-            <div v-if="isRejected">สาเหตุ: {{ reservationStatusNote }}</div>
+          </v-chip>
+          <div class="ms-3 mt-1 text-caption text-green" v-if="isApproved">
+            หมายเหตุจากพนักงาน: {{ reservationStatusNote }}
+          </div>
+          <div class="ms-3 mt-1 text-caption text-red" v-if="isRejected">
+            เหตุผล: {{ reservationStatusNote }}
+          </div>
+        </div>
+
+        <div class="d-flex mx-auto justify-end">
+          <div v-if="editable" class="mx-5">
+            <ManageReservedClassroom />
           </div>
 
-          <div class="d-flex mx-auto justify-end">
-            <div v-if="editable" class="mx-5">
-              <ManageReservedClassroom />
-            </div>
-
-            <div v-if="deleteable && isRejected" class="mx-5">
-              <v-btn class="bg-red" color="white" @click="$emit('delete')">
-                ลบ
-              </v-btn>
-            </div>
+          <div v-if="showAutoDelete && isRejected" class="text-grey mx-5"> 
+            **คำเตือน** ระบบจะลบคำขออัตโนมัติภายใน 1 สัปดาห์
           </div>
 
-          <div
-            v-if="managable"
-            class="d-flex justify-end ms-16 mb-5 text-center"
-          >
+          <div v-if="deleteable && isPending" class="text-grey mx-5">
+            <v-btn
+              color="white"
+              class="bg-red mx-5"
+              @click="confirmDeleteDialog = true"
+            >
+              ยกเลิก
+            </v-btn>
+
+            <v-dialog v-model="confirmDeleteDialog" width="300">
+              <v-card class="align-center pa-5">
+                คุณต้องการที่จะยกเลิกหรือไม่
+                <!-- ################################################################################################## -->
+                <div>
+                  <v-btn
+                    color="white"
+                    class="bg-red mt-2 mx-5"
+                    @click="confirmDeleteDialog = false, $emit('cancel')"
+                  >
+                    ใช่
+                  </v-btn>
+                  <!-- ################################################################################################## -->
+                  <v-btn
+                    color="white"
+                    class="bg-green mt-2 mx-5"
+                    @click="confirmDeleteDialog = false"
+                  >
+                    ไม่ใช่
+                  </v-btn>
+                </div>
+              </v-card>
+            </v-dialog>
+          </div>
+        </div>
+      </v-col>
+      <v-divider vertical class="mb-2"> </v-divider>
+      <v-col v-if="managable" cols="12" md="5">
+        <div v-if="managable" class="mt-2 justify-end mb-5 text-center">
+          <v-textarea
+            v-model="manageDetail"
+            label="หมายเหตุ"
+            class="mx-5 mt-1"
+          ></v-textarea>
+          <div class="d-flex justify-end">
             <v-btn
               color="white"
               class="bg-green mx-5"
-              @click="$emit('approve')"
+              @click="$emit('approve', reservation.id, manageDetail)"
             >
               อนุมัติ
             </v-btn>
-            <v-btn color="white" class="bg-red mx-5" @click="$emit('reject')">
+            <v-btn
+              color="white"
+              class="bg-red mx-5"
+              @click="$emit('reject', reservation.id, manageDetail)"
+            >
               ไม่อนุมัติ
             </v-btn>
           </div>
-        </v-col>
-      </v-row>
-    </v-card>
+        </div>
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
 
 <!-- Parameter = Building, Name, Date, Time, Picture, Status -->
@@ -104,7 +144,8 @@ export default {
     showStatus: { type: Boolean, require: false, dafault: false },
     showReserveNote: { type: Boolean, require: false, dafault: true },
     showSize: { type: Boolean, require: false, dafault: true },
-    showSeat: { type: Boolean, require: false, default: true},
+    showSeat: { type: Boolean, require: false, default: true },
+    showAutoDelete: { type: Boolean, requre: false, default: false },
 
     // control options
     editable: { type: Boolean, require: false, default: false },
@@ -114,10 +155,10 @@ export default {
 
     // miscellaneous
     width: { type: Number, require: false, default: 700 },
-    cardSelected: { type: Boolean, require: false, default: false }
+    cardSelected: { type: Boolean, require: false, default: false },
   },
 
-  emits: ["approve", "reject", "delete", "selected", "unselected"],
+  emits: ["approve", "reject", "cancel", "selected", "unselected"],
 
   methods: {},
 
@@ -136,7 +177,9 @@ export default {
         minute: "numeric",
       },
       locale: "th-TH",
-    }
+    },
+    manageDetail: null,
+    confirmDeleteDialog: false,
   }),
 
   computed: {
@@ -237,6 +280,8 @@ export default {
           return "อนุมัติ";
         case "rejected":
           return "ไม่อนุมัติ";
+        case "canceled":
+          return "ยกเลิกแล้ว";
         default:
           return "<<Invalid status>>";
       }
@@ -251,6 +296,7 @@ export default {
         case "approved":
           return "text-green";
         case "rejected":
+        case "canceled":
           return "text-red";
         default:
           defaultValue;
@@ -273,12 +319,23 @@ export default {
       if (!this.reservation || !this.reservation.status) return false;
       return this.reservation.status == "rejected";
     },
+
+    isPending() {
+      if (!this.reservation || !this.reservation.status) return false;
+      return this.reservation.status == "pending";
+    },
+
+    isApproved() {
+      if (!this.reservation || !this.reservation.status) return false;
+      return this.reservation.status == "approved";
+    },
   },
 
   setup() {},
 
   beforeMount() {},
 
-  mounted() { console.log(this.selectable, this.cardSelected)},
+  mounted() {
+  },
 };
 </script>

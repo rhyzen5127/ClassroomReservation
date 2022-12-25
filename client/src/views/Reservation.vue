@@ -109,7 +109,7 @@
               >
                 ยืนยัน
               </v-btn>
-              <v-dialog v-model="successDialog">
+              <v-dialog v-if="!loading" v-model="successDialog">
                 <v-card class="d-flex align-center justify-center my-2 pa-5">
                   <div class="text-center" v-if="isReservationSuccess">
                     <h2 class="text-green">สำเร็จ</h2>
@@ -123,7 +123,7 @@
                     color="black"
                     class="mt-5"
                     @click="(confirmDialog = false), (successDialog = false)"
-                    to="/history"
+                    :to="isReservationSuccess ? '/history' : null"
                   >
                     <h5>ปิด</h5>
                   </v-btn>

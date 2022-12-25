@@ -27,14 +27,13 @@
 
       </v-card>
       <v-divider></v-divider>
-      <v-card class="overflow-y-auto" max-height="485">
-        <div v-for="i in reservations" :key="i.id" class="my-4">
-          <ClassroomCard 
+      <v-card class="overflow-y-auto my-4" max-height="485">
+        <div v-for="i in reservations" :key="i.id">
+          <ClassroomCard
             :reservation="i"
             :width="648.91" class="my-5"
             showOwner
             />
-          <v-divider></v-divider>
         </div>
       </v-card>
     </v-col>

@@ -60,10 +60,28 @@ export const useReservationStore = defineStore('reservations', () => {
     await axios.post(`/reservations/${reservationId}/reject`, { reason }, options)
   }
 
-  async function deleteReservation(token, reservationId) {
+  async function cancel(token, reservationId) {
     let options = userStore.addBearerAuth(token, {}) 
-    await axios.delete(`/reservations/${reservationId}`, options)
+    await axios.post(`/reservations/${reservationId}/cancel`, {}, options)
   }
 
-  return { fetchAll, fetchFromBuilding, fetchFromClassroom, fetchById, fetchUserReserved, reserve, approve, reject, deleteReservation }
+  async function exportPDF(reservations) {
+    console.log(reservations)
+    let options = { responseType: "blob" } //userStore.addBearerAuth(token, {}) 
+    let res = await axios.post(`/reservations/schedules.pdf`, { reservations }, options)
+    return res.data
+  }
+
+  return { 
+    fetchAll, 
+    fetchFromBuilding, 
+    fetchFromClassroom, 
+    fetchById, 
+    fetchUserReserved, 
+    reserve, 
+    approve, 
+    cancel, 
+    reject, 
+    exportPDF
+   }
 })
