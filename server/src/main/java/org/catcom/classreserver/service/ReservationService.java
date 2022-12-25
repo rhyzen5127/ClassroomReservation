@@ -69,14 +69,16 @@ public class ReservationService
             reservation.setApprover(reserver);
             reservation.setApproveTime(bookingTime);
             reservation.setApproveNote("อนุมัติคำขออัติโนมัตสำหรับ staff");
+            reservationRepos.save(reservation);
+
             rejectAllOverlapSchedule(reservation);
         }
         else
         {
             reservation.setPending();
+            reservationRepos.save(reservation);
         }
 
-        reservationRepos.save(reservation);
 
     }
 
