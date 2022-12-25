@@ -17,6 +17,7 @@
 import SideBarAccount from './icons/SideBarAccount.vue'
 
 export default {
+
   props: {
     title: {
       type: String,
@@ -66,7 +67,7 @@ export default {
       {
         color: "orange",
         icon: "mdi-book",
-        title: "ค้นหาหรือจองห้องเรียน",
+        title: "ค้นหาและจองห้องเรียน",
         value: "reservation",
         to: "/reservation",
         checkRole: "null,user,staff"
@@ -98,7 +99,7 @@ export default {
       {
         color: "cyan",
         icon: "mdi-file-chart",
-        title: "นำออกรายงานการจอง",
+        title: "ส่งออกรายงานการใช้ห้อง",
         value: "report",
         to: "/report",
         checkRole: "staff"

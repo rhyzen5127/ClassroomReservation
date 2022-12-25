@@ -55,7 +55,7 @@
     </v-col>
     <div>
       <v-card class="text-center mx-3" color="orange">
-        รายละเอียดการนำนอกการจอง
+        รายการที่จะส่งออก
       </v-card>
       <v-card
         width="1600"
@@ -68,7 +68,7 @@
       </v-card>
       <div class="d-flex justify-end mr-7 mt-2">
 
-        <v-btn :disabled="reservationToExport.length == 0" color="green" class="mx-2" @click="exportReservationSchedules"> นำออก </v-btn>
+        <v-btn :disabled="reservationToExport.length == 0" color="green" class="mx-2" @click="exportReservationSchedules"> ส่งออก </v-btn>
 
         <v-btn :disabled="reservationToExport.length == 0" color="red" class="mx-2" @click="deselectAllPresentReservations()"> รีเซ็ต </v-btn>
       </div>

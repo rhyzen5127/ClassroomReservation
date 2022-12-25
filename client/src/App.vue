@@ -58,6 +58,7 @@ export default {
         })
         .catch(() => {
           localStorage.removeItem("cookie")
+          this.$router.replace("/")
         })
 
       }

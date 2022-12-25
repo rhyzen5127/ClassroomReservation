@@ -17,6 +17,9 @@
           วันที่ {{ displayTime() }}
         </div>
 
+
+<!-- 
+        <ClassroomSelector class="mx-5" v-model="room" /> -->
         <v-select v-model="building" label="เลือกอาคาร" :items="building_item" item-title="name" item-value="id"
           persistence-hint return-object class="mx-5">
         </v-select>
@@ -42,6 +45,7 @@
 
 <script>
 import ClassroomCard from '@/components/ClassroomCard.vue'
+import ClassroomSelector from '@/components/ClassroomSelector.vue'
 import EventCalendar from '@/components/EventCalendar.vue'
 import { useReservationStore } from '@/stores/reservations.js'
 import { useBuildingStore } from '@/stores/buildings.js'
@@ -53,19 +57,24 @@ export default {
   components: {
     EventCalendar,
     ClassroomCard,
+    ClassroomSelector
   },
 
   data() {
     return {
-      reservations: [],
+
       building: null,
-      building_item: [],
       room: null,
-      classroom_item: [],
-      bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
-      tel: null,
       startTime: null,
-      finishTime: null
+      finishTime: null,
+
+      building_item: [],
+      classroom_item: [],
+      reservations: [],
+
+      bannerPath: new URL("@/assets/images/home-banner-background.png", import.meta.url).href,
+
+      tel: null
     };
 
   },

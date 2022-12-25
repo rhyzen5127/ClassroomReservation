@@ -2,12 +2,13 @@
     <div class="mx-15 my-15">
         <v-form ref="form" v-model="valid" lazy-validation>
             <div class="text-h6 mb-5"> Login </div>
+
             <v-text-field v-model="email" :rules="emailRules" label="E-mail" required @keyup.enter="validate"></v-text-field>
 
             <v-text-field v-model="password" :rules="passwordRules" label="Password" type="password"
                 required @keyup.enter="validate"></v-text-field>
 
-            <v-btn color="success" class="mr-4" @click="validate">
+            <v-btn :disabled="!valid" color="success" class="mr-4" @click="validate">
                 Login
             </v-btn>
 

@@ -1,6 +1,33 @@
 <template>
   <div class="mt-10 mx-10">
-    <div class="text-h6 mb-1">กรุณากรอกข้อมูล</div>
+    <div class="text-h5 mb-4">ค้นหาและจองห้องเรียน</div>
+
+    <div class="text-caption mb-2">เลือกห้องเรียน</div>
+    <ClassroomSelector v-model="room" compact />
+
+    <v-expansion-panels v-if="room" class="py-5">
+      <v-expansion-panel>
+        <v-expansion-panel-title expand-icon="mdi-plus" collapse-icon="mdi-minus">
+          <div class="d-flex align-center">
+              <v-icon size="large" color="#ff8000" class="pr-5">mdi-information</v-icon>
+              <div class="text-body-1 text-black"> รายละเอียดห้องเรียน </div>
+          </div>
+         
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <div class="d-flex my-2">
+            <div class="text-body-2 mx-2"> ที่นั่ง : </div>
+            <div class="text-caption text-grey mx-2"> {{ room.seats ? room.seats + " ที่นั่ง" : "(ไม่ระบุ)" }} </div>
+          </div>
+          <div class="d-flex my-2">
+            <div class="text-body-2 mx-2"> หมายเหตุ : </div>
+            <div class="text-caption text-grey mx-2"> {{ room.note ? room.note + " ที่นั่ง" : "-" }} </div>
+          </div>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
+
+    <!--
     <v-select
       v-model="building"
       label="เลือกอาคาร"
@@ -22,8 +49,12 @@
       return-object
     >
     </v-select>
+  -->
+		<v-divider class="my-5" />
 
+    <div class="text-caption mb-2">เลือกช่วงเวลาที่จะเข้าใช้ห้อง</div>
     <Datepicker
+      class="mt-4"
       v-model="date"
       :enable-time-picker="false"
       placeholder="กรุณาเลือกวันที่"
@@ -53,9 +84,9 @@
           minutes-increment="30"
           minutes-grid-increment="30"
           :clearable="false"
-          :start-time="startTime || { hours: 8, minutes: 30 }"
+          :start-time="minTimeFromStartTime"
           placeholder="กรุณาเลือกเวลาสื้นสุด"
-          :min-time="startTime"
+          :min-time="minTimeFromStartTime"
         />
       </v-col>
     </v-row>
@@ -173,20 +204,37 @@ import { useReservationStore } from "@/stores/reservations";
 import { useUserStore } from "@/stores/users";
 
 import { defineComponent } from "vue";
+import ClassroomSelector from "../components/ClassroomSelector.vue";
 
 export default defineComponent({
   name: "Reservation",
 
-  components: { Datepicker },
+  components: {
+    ClassroomSelector,
+    Datepicker 
+  },
+
+  props: {
+    selectBuilding: {
+      type: Object,
+      require: false,
+      default: null,
+    },
+    selectRoom: {
+      type: Object,
+      require: true,
+      default: null
+    },
+  },
 
   data: () => ({
+
     // inputs
-    building: null,
     room: null,
-    startTime: null,
     date: new Date(),
+    startTime: null,
     endTime: null,
-    loading: true,
+    loading: false,
     detailField: "",
 
     // form state check
@@ -196,6 +244,7 @@ export default defineComponent({
     status: null,
     roomStatus: "สถานะห้องเรียน", //ว่าง | ไม่ว่าง | ไม่พร้อมใช้งาน
     roomStatusColor: "grey", //เขียว | แดง
+    classroomDetails: "กรุณาเลือกห้องเรียนก่อน",
 
     pickDate: new Date(),
     minSelectDate: new Date(),
@@ -208,55 +257,41 @@ export default defineComponent({
 
     building_item: [],
     classroom_items: [],
+
+    building_item_valid: false,
+    classroom_item_valid: false,
+
   }),
 
   computed: {
-    // [Room select dropdown] Disable state True | False
-    isDisableRoomSelect() {
-      return this.building ? false : true;
-    },
 
-    // [Room select dropdown] Label
-    roomSelectLabel() {
-      return this.building
-        ? "กรุณาเลือกห้อง"
-        : "กรุณาเลือกห้อง (กรุณาเลือกอาคารก่อน)";
-    },
+    minTimeFromStartTime() {
+      if (this.startTime) {
+        var minTime = {
+          hours: this.startTime.hours,
+          minutes: this.startTime.minutes + 30
+        }
+        if (minTime.minutes >= 60) {
+          minTime.minutes -= 60
+          minTime.hours += 1
+          if (minTime.hours >= 24) {
+            minTime.hours -= 24;
+          }
+        }
+        return minTime
+      }
+      return { hours: 9, minutes: 0 }
+    }
 
   },
 
   watch: {
 
-    date() {
-      this.validateInput();
-    },
-
-    building(newVal) {
-      if (newVal) {
-        // clear classroom options & input
-        this.classroom_items = [];
-        this.room = null;
-
-        this.loading = true;
-
-        // fetch classroom options
-        this.classroomStore
-          .fetchClassroomInBuilding(newVal.id)
-          .then((res) => {
-            this.classroom_items = res;
-            this.loading = false;
-          })
-          .catch((err) => {
-            console.error("Cannot fetch classrooms data: " + err.message);
-            this.loading = false;
-          });
-
-        this.loading = false;
-      }
-      this.validateInput();
-    },
-
     room() {
+      this.validateInput();
+    },
+
+    date() {
       this.validateInput();
     },
 
@@ -348,12 +383,6 @@ export default defineComponent({
 
     // check if selected room & time range is available in the current time
     async validateInput() {
-      // validate room status
-      if (this.room) {
-        if (this.room.status != "ready") {
-          this.markRoomStatusReady(false);
-        }
-      }
 
       // validate room availability when all inputs are filled in
       if (this.room && this.date && this.startTime && this.endTime) {
@@ -383,6 +412,14 @@ export default defineComponent({
             this.loading = false;
           });
       }
+      // validate room status when only room is selected
+      else if (this.room) {
+        if (this.room.status != "ready") {
+          this.markRoomStatusReady(false);
+        } else {
+          this.markRoomStatusReady(true);
+        }
+      }
     },
 
     async addReservation() {
@@ -409,9 +446,10 @@ export default defineComponent({
           this.loading = false;
         });
     },
+
   },
 
-  components: {},
+  components: { ClassroomSelector },
 
   // store setup
   setup() {
@@ -432,19 +470,13 @@ export default defineComponent({
 
   mounted() {
     this.isLoggedIn = this.userStore.currentUser ? true : false;
-
-    this.loading = true;
-    this.buildingStore
-      .fetchAll()
-      .then((res) => {
-        this.building_item = res;
-        this.loading = false;
-      })
-      .catch((err) => {
-        console.error("Cannot fetch building data: " + err.message);
-        this.loading = false;
-      });
   }
 
 });
 </script>
+
+<style scoped>
+v-expansion-panel-title {
+  background: #ff7a00;
+}
+</style>
