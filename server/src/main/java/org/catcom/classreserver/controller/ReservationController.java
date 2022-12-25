@@ -317,7 +317,7 @@ public class ReservationController
 
     // POST approve reservation
     @PostMapping("/reservations/{id}/approve")
-    void approveReservation(Authentication auth, @PathVariable int id, ApproveReservationForm form)
+    void approveReservation(Authentication auth, @PathVariable int id, @RequestBody ApproveReservationForm form)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null || !userDetail.isStaff())
@@ -330,7 +330,7 @@ public class ReservationController
 
     // POST reject reservation
     @PostMapping("/reservations/{id}/reject")
-    void rejectReservation(Authentication auth, @PathVariable int id, ApproveReservationForm form)
+    void rejectReservation(Authentication auth, @PathVariable int id, @RequestBody ApproveReservationForm form)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null || !userDetail.isStaff())
@@ -358,7 +358,7 @@ public class ReservationController
         reservationService.updateReservationStatus(id, ReservationStatus.CANCELED, userDetail.getUser(), null);
     }
 
-
+    /*
     // POST reject reservation
     @DeleteMapping("/reservations/{id}")
     void deleteReservation(Authentication auth, @PathVariable int id)
@@ -371,5 +371,5 @@ public class ReservationController
 
         reservationService.deleteReservation(id, userDetail.getUser());
     }
-
+    */
 }
