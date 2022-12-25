@@ -27,20 +27,20 @@ public class ReservationTaskSchedules
 
     // Run every hour at 0 min, 0 sec
     @Scheduled(cron = "0 0 * * * *")
-    public void deleteApprovedReservationPastUseTime()
+    public void deleteRejectedReservationPastUseTime()
     {
 
-        log.info("Cleaning up approved reservations...");
+        log.info("Cleaning up rejected & canceled reservations...");
 
         var lastWeek = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
 
         var toBeDeleted = reservationRepos.findAll(
-                not(hasStatus(PENDING)).and(not(approvedSince(lastWeek)))
+                hasStatus(REJECTED).or(hasStatus(CANCELED)).and(not(approvedSince(lastWeek)))
         );
 
         reservationRepos.deleteAll(toBeDeleted);
 
-        log.info("Cleaned up approved reservations.");
+        log.info("Cleaned up rejected & canceled reservations.");
 
     }
 
