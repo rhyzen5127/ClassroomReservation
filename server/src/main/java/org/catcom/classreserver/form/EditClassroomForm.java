@@ -19,4 +19,7 @@ public class EditClassroomForm
     @Nullable
     private Integer seats;
 
+    @Nullable
+    private String note;
+
 }

@@ -89,7 +89,8 @@ public class ClassroomController
                     form.getWidth(),
                     form.getLength(),
                     form.getSeats(),
-                    form.getStatus()
+                    form.getStatus(),
+                    form.getNote()
             );
         }
         catch (ClassroomException e)

@@ -22,6 +22,7 @@ public class ClassroomService
     @Autowired
     private ClassroomRepos classroomRepos;
 
+
     public List<Classroom> getAllClassrooms()
     {
         var sort = Sort.by(Sort.Order.asc("name"));
@@ -43,7 +44,8 @@ public class ClassroomService
             @Nullable Integer width,
             @Nullable Integer length,
             @Nullable Integer seats,
-            @Nullable String status
+            @Nullable String status,
+            @Nullable String note
     ) throws ClassroomException
     {
         var room = findRoom(id);
@@ -52,8 +54,10 @@ public class ClassroomService
         if (length != null) room.setLength(length);
         if (seats != null) room.setSeats(seats);
         if (status != null) room.setStatus(status);
+        if (note != null) room.setNote(note);
 
         classroomRepos.save(room);
+
     }
 
 }

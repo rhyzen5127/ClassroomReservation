@@ -53,7 +53,7 @@ public class ReservationService
         validateReservedRoom(room);
         validateBookingSchedule(bookingTime, startTime, finishTime);
         validateRoomSchedule(room, startTime, finishTime);
-        validateUserSchedule(reserver, room, startTime, finishTime);
+        validateUserSchedule(reserver, startTime, finishTime);
 
         var reservation = new Reservation();
         reservation.setOwner(reserver);
@@ -62,7 +62,20 @@ public class ReservationService
         reservation.setStartTime(startTime);
         reservation.setFinishTime(finishTime);
         reservation.setReserveNote(reserveNote);
-        reservation.setPending();
+
+        if (reserver.isStaff())
+        {
+            reservation.setApproved();
+            reservation.setApprover(reserver);
+            reservation.setApproveTime(bookingTime);
+            reservation.setApproveNote("อนุมัติคำขออัติโนมัตสำหรับ staff");
+            rejectAllOverlapSchedule(reservation);
+        }
+        else
+        {
+            reservation.setPending();
+        }
+
         reservationRepos.save(reservation);
 
     }
@@ -179,7 +192,7 @@ public class ReservationService
 
     }
 
-    private static final Duration MAX_CANCELABLE_DURATION = Duration.of(12, ChronoUnit.HOURS);
+    //private static final Duration MAX_CANCELABLE_DURATION = Duration.of(12, ChronoUnit.HOURS);
 
     // Update reservation status
     public void updateReservationStatus(
@@ -201,6 +214,8 @@ public class ReservationService
         {
             validateRoomSchedule(reservation.getRoom(), reservation.getStartTime(), reservation.getFinishTime());
         }
+
+        /*
         else if (CANCELED.equalsIgnoreCase(status))
         {
             var duration = Duration.between(now, reservation.getBookingTime());
@@ -208,7 +223,7 @@ public class ReservationService
             {
                 throw new ReservationException("Only reservation made withing 12 hours can be canceled.");
             }
-        }
+        }*/
 
         reservation.setStatus(status);
         reservation.setApprover(updater);
@@ -226,37 +241,23 @@ public class ReservationService
 
     }
 
-    // Delete a reservation
-    public void deleteReservation(int id, User deleter)
-    {
-        var reservation = getReservation(id);
-
-        if (reservation.isApproved())
-            throw new ReservationException("Approved reservations cannot be deleted");
-
-        if (!reservation.getOwner().equals(deleter))
-            throw new ReservationException("Only owner can delete their reservation");
-
-        reservationRepos.delete(reservation);
-    }
-
     // Check if a given schedule overlapped with another approved reservation of the given room
     public boolean isRoomHasOverlapSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
         if (!classroom.isReady()) return false;
 
         var overlapped = reservationRepos.findOne(
-                hasStatus(APPROVED).and(overlappingScheduleForRoom(classroom, startTime, finishTime))
+                hasStatus(APPROVED).and(forRoom(classroom)).and(scheduleOverlapWith(startTime, finishTime))
         );
 
         return overlapped.isPresent();
     }
 
     // Check if a given schedule overlapped with another non-rejected reservation of the given user
-    public boolean isUserHasOverlapSchedule(User user, Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
+    public boolean isUserHasOverlapSchedule(User user, LocalDateTime startTime, LocalDateTime finishTime)
     {
         var overlapped = reservationRepos.findOne(
-                hasOwner(user).and(hasStatus(PENDING).or(hasStatus(APPROVED))).and(overlappingScheduleForRoom(classroom, startTime, finishTime))
+                hasOwner(user).and(hasStatus(PENDING).or(hasStatus(APPROVED))).and(scheduleOverlapWith(startTime, finishTime))
         );
 
         return overlapped.isPresent();
@@ -289,11 +290,11 @@ public class ReservationService
             throw new ReservationException("Invalid reservation time range");
         }
 
-        var duration = Duration.between(bookingTime, startTime);
+        var duration = Duration.between(bookingTime.toLocalDate().atStartOfDay(), startTime.toLocalDate().atStartOfDay());
 
         if (duration.compareTo(MIN_BOOKING_ADVANCE_DURATION) < 0)
         {
-            throw new ReservationException("The reservation must be requested in advance for at least " + MIN_BOOKING_ADVANCE_DURATION);
+            throw new ReservationException("The reservation must be requested in advance for at least 3 days");
         }
     }
 
@@ -303,19 +304,20 @@ public class ReservationService
             @NonNull LocalDateTime finishTime
     ) throws ReservationScheduleOverlapException
     {
-        if (isRoomHasOverlapSchedule(classroom, startTime, finishTime) || !classroom.isReady()) {
+        if (isRoomHasOverlapSchedule(classroom, startTime, finishTime) || !classroom.isReady())
+        {
             throw new ReservationScheduleOverlapException("The requested room is not available for the given time");
         }
     }
 
     void validateUserSchedule(
             @NonNull User user,
-            @NonNull Classroom classroom,
             @NonNull LocalDateTime startTime,
             @NonNull LocalDateTime finishTime
     ) throws ReservationScheduleOverlapException
     {
-        if (isUserHasOverlapSchedule(user, classroom, startTime, finishTime) || !classroom.isReady()) {
+        if (isUserHasOverlapSchedule(user, startTime, finishTime))
+        {
             throw new ReservationScheduleOverlapException("The user has already requested a reservation whose schedule overlapped with the current request");
         }
     }
@@ -327,14 +329,14 @@ public class ReservationService
     {
         switch (newStatus)
         {
-            case PENDING -> {
+            case PENDING ->
+            {
                 throw new InvalidReservationStateException("Cannot set reservation status to pending");
             }
             case CANCELED ->
             {
-                if (reservation.isPending()) return;
-
-                throw new InvalidReservationStateException("Only pending reservation can be canceled");
+                if (reservation.isPending() || reservation.isApproved()) return;
+                throw new InvalidReservationStateException("Only pending and approved reservation can be canceled");
             }
             case APPROVED, REJECTED ->
             {

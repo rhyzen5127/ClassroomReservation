@@ -11,6 +11,8 @@ import org.catcom.classreserver.model.reservation.Reservation;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.catcom.classreserver.model.classroom.ClassroomStatus.*;
+
 @Entity
 @Table(name = "classrooms")
 public class Classroom
@@ -64,7 +66,7 @@ public class Classroom
 
     public boolean isReady()
     {
-        return "ready".equalsIgnoreCase(status);
+        return READY.equalsIgnoreCase(status);
     }
 
 }

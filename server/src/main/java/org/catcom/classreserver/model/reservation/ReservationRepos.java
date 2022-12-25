@@ -57,6 +57,13 @@ public interface ReservationRepos extends JpaRepository<Reservation, Integer>, J
         };
     }
 
+    static Specification<Reservation> scheduleOverlapWith(LocalDateTime startTime, LocalDateTime finishTime) {
+        return (r, cq, cb) -> cb.and(
+                cb.lessThan(r.get("startTime"), finishTime),
+                cb.greaterThan(r.get("finishTime"), startTime)
+        );
+    }
+
     static Specification<Reservation> overlappingScheduleForRoom(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime) {
         return (r, cq, cb) -> cb.and(
                 cb.equal(r.get("room"), classroom),

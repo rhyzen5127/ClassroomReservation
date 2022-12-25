@@ -250,7 +250,7 @@ public class ReservationController
             var finishTimeLocal = finishTime.toLocalDateTime();
 
             var roomAvailable = !reservationService.isRoomHasOverlapSchedule(room, startTimeLocal, finishTimeLocal);
-            var userAvailable = userDetail == null || !reservationService.isUserHasOverlapSchedule(userDetail.getUser(), room, startTimeLocal, finishTimeLocal);
+            var userAvailable = userDetail == null || !reservationService.isUserHasOverlapSchedule(userDetail.getUser(), startTimeLocal, finishTimeLocal);
 
             return Map.of( "available", roomAvailable && userAvailable );
 
@@ -343,7 +343,7 @@ public class ReservationController
 
     // POST reject reservation
     @PostMapping("/reservations/{id}/cancel")
-    void cancelReservation(Authentication auth, @PathVariable int id)
+    void cancelReservation(Authentication auth, @PathVariable int id, @RequestBody ApproveReservationForm form)
     {
         var userDetail = userDetailService.loadByAuthentication(auth);
         if (userDetail == null)
@@ -355,7 +355,7 @@ public class ReservationController
         {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User can only cancel their own reservation");
         }
-        reservationService.updateReservationStatus(id, ReservationStatus.CANCELED, userDetail.getUser(), null);
+        reservationService.updateReservationStatus(id, ReservationStatus.CANCELED, userDetail.getUser(), form.getReason());
     }
 
     /*
