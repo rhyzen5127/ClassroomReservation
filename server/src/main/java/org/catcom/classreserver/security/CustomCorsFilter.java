@@ -31,12 +31,12 @@ public class CustomCorsFilter extends CorsFilter {
         res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, X-Requested-With, Remember-Me");
 
         if (CorsUtils.isPreFlightRequest(req)) {
-            log.info("customCorsFilter doFilter preflight request from Origin " + req.getHeader("Origin"));
+            //log.info("customCorsFilter doFilter preflight request from Origin " + req.getHeader("Origin"));
             return;
         }
-        else {
-            log.info("customCorsFilter doFilter from Origin " + req.getHeader("Origin"));
-        }
+        //else {
+            //log.info("customCorsFilter doFilter from Origin " + req.getHeader("Origin"));
+        //}
 
         chain.doFilter(req, res);
     }

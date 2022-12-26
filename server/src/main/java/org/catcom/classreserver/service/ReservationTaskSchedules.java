@@ -1,17 +1,16 @@
 package org.catcom.classreserver.service;
 
 import org.catcom.classreserver.model.reservation.ReservationRepos;
-import org.catcom.classreserver.model.reservation.ReservationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static org.springframework.data.jpa.domain.Specification.allOf;
 import static org.springframework.data.jpa.domain.Specification.not;
 import static org.catcom.classreserver.model.reservation.ReservationRepos.*;
 import static org.catcom.classreserver.model.reservation.ReservationStatus.*;
@@ -35,7 +34,7 @@ public class ReservationTaskSchedules
         var lastWeek = LocalDateTime.now().minus(1, ChronoUnit.WEEKS);
 
         var toBeDeleted = reservationRepos.findAll(
-                hasStatus(REJECTED).or(hasStatus(CANCELED)).and(not(approvedSince(lastWeek)))
+                allOf(hasStatus(REJECTED).or(hasStatus(CANCELED)), not(approvedSince(lastWeek)))
         );
 
         reservationRepos.deleteAll(toBeDeleted);
@@ -53,7 +52,7 @@ public class ReservationTaskSchedules
 
         var now = LocalDateTime.now();
         var toBeRejected = reservationRepos.findAll(
-                hasStatus(PENDING).and(roomUsedBefore(now))
+                hasStatus(PENDING).and(roomAlreadyUsedBefore(now))
         );
 
         for (var reservation : toBeRejected)

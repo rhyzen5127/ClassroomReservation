@@ -1,7 +1,10 @@
 package org.catcom.classreserver.controller;
 
+import com.nimbusds.jose.util.Pair;
 import com.opencsv.CSVWriter;
 import org.catcom.classreserver.form.ExportScheduleForm;
+import org.catcom.classreserver.form.NotedReservation;
+import org.catcom.classreserver.form.NotedReservationInstance;
 import org.catcom.classreserver.model.reservation.Reservation;
 import org.catcom.classreserver.service.ClassroomService;
 import org.catcom.classreserver.service.ReportGeneratorService;
@@ -18,9 +21,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 @RestController
 public class ReportController
@@ -41,29 +43,42 @@ public class ReportController
     )
     {
 
-        var reservations = new ArrayList<Reservation>();
-        var notes = new ArrayList<String>();
+        var reservationInput = form.getReservations();
 
-        if (form.getReservations() == null)
+        if (reservationInput == null)
         {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reservation specified!");
         }
 
-        if (form.getReservations().length > 15)
+        if (reservationInput.length > 15)
         {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot export more than 15 reservations in a single file!");
         }
 
-        for (var i : form.getReservations())
+        var notedReservation = Arrays.stream(reservationInput)
+                .map(r -> new NotedReservationInstance(reservationService.getReservation(r.getId()), r.getNote()))
+                .sorted((v1, v2) -> {
+
+                    var compStartTime = v1.getReservation().getStartTime().compareTo(v2.getReservation().getStartTime());
+                    if (compStartTime != 0) return compStartTime;
+
+                    var compFinishTime = v1.getReservation().getFinishTime().compareTo(v2.getReservation().getFinishTime());
+                    if (compFinishTime != 0) return compFinishTime;
+
+                    return v1.getReservation().getBookingTime().compareTo(v2.getReservation().getBookingTime());
+                })
+                .toList()
+                ;
+
+
+        var reservations = new ArrayList<Reservation>();
+        var notes = new ArrayList<String>();
+
+        for (var i : notedReservation)
         {
-            var reservationId = i.getId();
-            reservations.add(reservationService.getReservation(reservationId));
+            reservations.add(i.getReservation());
             notes.add(i.getNote());
         }
-
-
-
-        reservations.sort(Comparator.comparing(Reservation::getStartTime).thenComparing(Reservation::getFinishTime));
 
         if ("csv".equalsIgnoreCase(ext))
         {

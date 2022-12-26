@@ -9,4 +9,5 @@ public class NotedReservation {
     private Integer id;
     private String note;
 
+
 }

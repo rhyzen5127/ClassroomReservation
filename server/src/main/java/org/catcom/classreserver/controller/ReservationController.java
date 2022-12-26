@@ -249,7 +249,7 @@ public class ReservationController
             var startTimeLocal = startTime.toLocalDateTime();
             var finishTimeLocal = finishTime.toLocalDateTime();
 
-            var roomAvailable = !reservationService.isRoomHasOverlapSchedule(room, startTimeLocal, finishTimeLocal);
+            var roomAvailable = room.isReady() && !reservationService.isRoomHasOverlapSchedule(room, startTimeLocal, finishTimeLocal);
             var userAvailable = userDetail == null || !reservationService.isUserHasOverlapSchedule(userDetail.getUser(), startTimeLocal, finishTimeLocal);
 
             return Map.of( "available", roomAvailable && userAvailable );

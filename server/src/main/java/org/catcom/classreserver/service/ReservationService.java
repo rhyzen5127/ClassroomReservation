@@ -68,7 +68,7 @@ public class ReservationService
             reservation.setApproved();
             reservation.setApprover(reserver);
             reservation.setApproveTime(bookingTime);
-            reservation.setApproveNote("อนุมัติคำขออัติโนมัตสำหรับ staff");
+            reservation.setApproveNote("อนุมัติคำขออัตโนมัติสำหรับ staff");
             reservationRepos.save(reservation);
 
             rejectAllOverlapSchedule(reservation);
@@ -246,23 +246,22 @@ public class ReservationService
     // Check if a given schedule overlapped with another approved reservation of the given room
     public boolean isRoomHasOverlapSchedule(Classroom classroom, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        if (!classroom.isReady()) return false;
 
-        var overlapped = reservationRepos.findOne(
+        var overlapped = reservationRepos.findAll(
                 hasStatus(APPROVED).and(forRoom(classroom)).and(scheduleOverlapWith(startTime, finishTime))
         );
 
-        return overlapped.isPresent();
+        return !overlapped.isEmpty();
     }
 
     // Check if a given schedule overlapped with another non-rejected reservation of the given user
     public boolean isUserHasOverlapSchedule(User user, LocalDateTime startTime, LocalDateTime finishTime)
     {
-        var overlapped = reservationRepos.findOne(
+        var overlapped = reservationRepos.findAll(
                 hasOwner(user).and(hasStatus(PENDING).or(hasStatus(APPROVED))).and(scheduleOverlapWith(startTime, finishTime))
         );
 
-        return overlapped.isPresent();
+        return !overlapped.isEmpty();
     }
 
 
@@ -306,7 +305,7 @@ public class ReservationService
             @NonNull LocalDateTime finishTime
     ) throws ReservationScheduleOverlapException
     {
-        if (isRoomHasOverlapSchedule(classroom, startTime, finishTime) || !classroom.isReady())
+        if (!classroom.isReady() || isRoomHasOverlapSchedule(classroom, startTime, finishTime) || !classroom.isReady())
         {
             throw new ReservationScheduleOverlapException("The requested room is not available for the given time");
         }
@@ -359,6 +358,8 @@ public class ReservationService
 
         for (var r : overlaps) {
             r.setStatus(REJECTED);
+            r.setApproveTime(LocalDateTime.now());
+            r.setApproveNote("ถูกปฏิเสธเนื่องจากมีผู้ใช้คนอื่นทีใช้ห้องเรียนในช่วงเวลานี้ไปแล้ว");
         }
 
         reservationRepos.saveAll(overlaps);
