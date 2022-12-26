@@ -22,6 +22,9 @@
       />
     </div>
     <div class="overflow-y-auto my-5" max-height="650">
+    
+        <div v-if="userReservations.length == 0" class="text-caption text-center text-grey-darken-1 pt-8">( ไม่พบประวัติคำขอจองห้องของคุณ )</div>
+
       <ClassroomCard
         v-for="i in userReservations"
         :key="i + '-classCard'"
@@ -47,10 +50,7 @@
 <script>
 import ClassroomCard from "@/components/ClassroomCard.vue";
 import EventCalendar from "@/components/EventCalendar.vue";
-import { useBuildingStore } from "@/stores/buildings.js";
-import { useClassroomStore } from "@/stores/classrooms.js";
-import { useReservationStore } from "@/stores/reservations.js";
-import { useUserStore } from "../stores/users";
+import { useStores } from "@/stores/index.js";
 
 export default {
   data: () => ({
@@ -107,7 +107,7 @@ export default {
       this.loading = true;
 
       // check logged in user first
-      this.userStore
+      this.stores.user
         .fetchCurrentUser(token)
         .then(() => {
           this.userReservations = [];
@@ -134,7 +134,7 @@ export default {
           };
 
           // fetch all user reservation
-          this.reservationStore
+          this.stores.reservation
             .fetchUserReserved(token, fetchParams)
             .then((res) => {
               console.log(res);
@@ -189,7 +189,7 @@ export default {
 
     cancelReservation(reservationId) {
       let token = localStorage.getItem("cookie");
-      this.reservationStore
+      this.stores.reservation
         .cancel(token, reservationId)
         .then(() => {
           this.fetchUserReservation();
@@ -201,12 +201,12 @@ export default {
   },
 
   setup() {
-    return {
-      reservationStore: useReservationStore(),
-      buildingStore: useBuildingStore(),
-      classroomStore: useClassroomStore(),
-      userStore: useUserStore(),
-    };
+
+    let stores = {
+      stores: useStores()
+    }
+
+    return stores
   },
 
   name: "History",
@@ -216,9 +216,18 @@ export default {
     EventCalendar,
   },
 
-  mounted() {
-    this.fetchUserReservation();
+  beforeMount() {
+    // check if user is logged in or not, if no then redirect to homepage
+    this.stores.user.fetchCurrentUser(localStorage.getItem('cookie')).catch(() => {
+      this.$router.replace("/")
+    })
+
   },
+
+  mounted() {
+    this.fetchUserReservation()
+  }
+
 };
 </script>
   

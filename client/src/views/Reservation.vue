@@ -21,7 +21,7 @@
           </div>
           <div class="d-flex my-2">
             <div class="text-body-2 mx-2"> หมายเหตุ : </div>
-            <div class="text-caption text-grey mx-2"> {{ room.note ? room.note + " ที่นั่ง" : "-" }} </div>
+            <div class="text-caption text-grey mx-2"> {{ room.note ? room.note : "-" }} </div>
           </div>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -198,10 +198,7 @@
 <script>
 import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
-import { useClassroomStore } from "@/stores/classrooms";
-import { useBuildingStore } from "@/stores/buildings";
-import { useReservationStore } from "@/stores/reservations";
-import { useUserStore } from "@/stores/users";
+import { useStores } from "@/stores/index";
 
 import { defineComponent } from "vue";
 import ClassroomSelector from "../components/ClassroomSelector.vue";
@@ -392,7 +389,7 @@ export default defineComponent({
         let token = localStorage.getItem("cookie")
 
         // fetch classroom options
-        this.classroomStore
+        this.stores.classroom
           .checkIsRoomAvailable(
             token,
             this.room.id,
@@ -428,7 +425,7 @@ export default defineComponent({
       }
 
       this.loading = true;
-      this.reservationStore
+      this.stores.reservation
         .reserve(
           localStorage.getItem("cookie"),
           this.room.id,
@@ -454,23 +451,29 @@ export default defineComponent({
   // store setup
   setup() {
     return {
-      buildingStore: useBuildingStore(),
-      classroomStore: useClassroomStore(),
-      reservationStore: useReservationStore(),
-      userStore: useUserStore(),
+      stores: useStores()
     };
   },
 
   // date picker setup
   beforeMount() {
+
+    this.isLoggedIn = false;
+    
+    // check if user is logged in or not, if no then redirect to homepage
+    this.stores.user.fetchCurrentUser(localStorage.getItem('cookie')).then(() => {
+      this.isLoggedIn = true;
+    })
+
     this.minSelectDate = new Date();
     this.minSelectDate.setDate(this.minSelectDate.getDate() + 3);
     this.date = this.minSelectDate;
+
   },
 
   mounted() {
-    this.isLoggedIn = this.userStore.currentUser ? true : false;
   }
+
 
 });
 </script>

@@ -3,6 +3,9 @@
     <div class="text-h6 mb-1">
       จัดการคำขอจอง
     </div>
+
+    <div v-if="userReservations.length == 0" class="text-caption text-center text-grey-darken-1 pt-8">( ยังไม่มีคำขอที่รอการอนุมัติในตอนนี้... )</div>
+
     <v-card class="overflow-y-auto" max-height="650" max-width="1200">
       <div v-for="i in userReservations" :key="i + '-classCard'" class="my-4">
         <ClassroomCard 
@@ -14,6 +17,13 @@
           />
       </div>
     </v-card>
+    <v-snackbar
+      v-model="showApproveDialog"
+      :color="approveSuccess ? 'green' : 'red'"
+      :timeout="2000"
+    >
+      {{ approveMessage }}
+    </v-snackbar>
   </div>
 </template>
   
@@ -21,7 +31,7 @@
 import ClassroomCard from '@/components/ClassroomCard.vue'
 import EventCalendar from '@/components/EventCalendar.vue'
 import { defineComponent } from 'vue';
-import { useReservationStore } from '@/stores/reservations.js'
+import { useStores } from '../stores';
 
 // Components
 
@@ -31,7 +41,10 @@ export default defineComponent({
   data: () => ({
     nReservation: 1,
     loading: false,
-    userReservations: []
+    userReservations: [],
+    approveMessage: "",
+    approveSuccess: false,
+    showApproveDialog: false
   }),
 
   methods: {
@@ -40,7 +53,7 @@ export default defineComponent({
 
       this.userReservations = []
       this.loading = true
-      this.reservationStore.fetchAll({
+      this.stores.reservation.fetchAll({
         status: "pending"
       }).then(res => {
         console.log(res)
@@ -54,22 +67,42 @@ export default defineComponent({
     },
 
     approveReservation(reservationId, reason) {
+
+      this.showApproveDialog = false
+      this.approveSuccess = false
+      this.approveMessage = ""
+
       let token = localStorage.getItem('cookie')
-      this.reservationStore.approve(token, reservationId, reason).then(res => {
-        alert("อนุมัติการจองสำเร็จ")
+      this.stores.reservation.approve(token, reservationId, reason).then(res => {
+        this.approveMessage = "อนุมัติการจองสำเร็จ"
+        this.approveSuccess = true
+        this.showApproveDialog = true
         this.fetchPendingReservation()
       }).catch(() => {
-        alert("อนุมัติการจองล้มเหลว")
+        this.approveMessage = "อนุมัติการจองล้มเหลว"
+        this.approveSuccess = false
+        this.showApproveDialog = true
       })
+
     },
 
     rejectReservation(reservationId, reason) {
+
+      this.showApproveDialog = false
+      this.approveSuccess = false
+      this.approveMessage = ""
+
       let token = localStorage.getItem('cookie')
-      this.reservationStore.reject(token, reservationId, reason).then(res => {
-        alert("ปฏิเสธการจองสำเร็จ")
+
+      this.stores.reservation.reject(token, reservationId, reason).then(res => {
+        this.approveMessage = "ปฏิเสธการจองสำเร็จ"
+        this.approveSuccess = true
+        this.showApproveDialog = true
         this.fetchPendingReservation()
       }).catch(() => {
-        alert("ปฏิเสธการจองล้มเหลว")
+        this.approveMessage = "ปฏิเสธการจองล้มเหลว"
+        this.approveSuccess = false
+        this.showApproveDialog = true
       })
     }
 
@@ -77,7 +110,7 @@ export default defineComponent({
 
   setup() {
     return {
-      reservationStore: useReservationStore()
+      stores: useStores()
     }
   },
 
@@ -86,9 +119,24 @@ export default defineComponent({
     EventCalendar,
   },
 
+  beforeMount() {
+    // check if user is logged in and is a staff or not, if no then redirect to homepage
+    this.stores.user.fetchCurrentUser(localStorage.getItem('cookie'))
+    .then(userData => {
+      if (userData.role != 'staff') {
+      this.$router.replace("/")
+      }
+    })
+    .catch(() => {
+      this.$router.replace("/")
+    })
+
+  },
+
   mounted() {
     this.fetchPendingReservation()
   }
+  
 });
 </script>
   

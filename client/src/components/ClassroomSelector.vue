@@ -109,6 +109,7 @@ export default {
 				.fetchAll()
 				.then((res) => {
 				this.building_item = res;
+				this.building_item.sort((a, b) => a.name < b.name ? -1 : 1)
 				this.loading = false;
 				})
 				.catch((err) => {
@@ -135,6 +136,7 @@ export default {
 				.fetchClassroomInBuilding(this.building.id)
 				.then((res) => {
 				this.classroom_items = res;
+				this.classroom_items.sort((a, b) => a.name < b.name ? -1 : 1)
 				this.loading = false;
 				})
 				.catch((err) => {

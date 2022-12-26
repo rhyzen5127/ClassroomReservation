@@ -11,14 +11,14 @@
             <v-btn :disabled="!valid" color="success" class="mr-4" @click="validate">
                 Login
             </v-btn>
-
+<!-- 
             <v-btn color="primary" class="mr-4" @click="loginAsStaffTest()">
                 Login as STAFF
             </v-btn>
 
             <v-btn color="secondary" class="mr-4" @click="loginAsUserTest()">
                 Login as USER
-            </v-btn>
+            </v-btn> -->
 
 
             <div>

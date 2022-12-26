@@ -14,7 +14,7 @@
       <v-badge :content="69240" color="white"><v-btn color="white" icon="mdi-bell"/></v-badge> -->
       
 
-      <v-btn color="white" to="/about" icon="mdi-exclamation-thick"/>
+      <v-btn color="white" to="/manual" icon="mdi-comment-question-outline" />
 
       <NavBarAccount :title="this.title" :isLoggedIn="this.isLoggedIn"></NavBarAccount>
 
@@ -59,6 +59,7 @@ export default {
       window.location.href = '/'
     }
   }
+  
 }
 </script>
 

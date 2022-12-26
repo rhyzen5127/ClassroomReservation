@@ -1,15 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import axios from '../plugins/axios'
 
 export const useUserStore = defineStore('users', () => {
 
   const currentUser = ref(null)
-
-  function addBearerAuthHeader(headers, token) {
-    headers["Authorization"] = "Bearer " + token
-    return headers
-  }
 
   function addBearerAuth(token, options) {
     options = options || {}
@@ -37,5 +32,5 @@ export const useUserStore = defineStore('users', () => {
 
   }
 
-  return { currentUser, login, fetchCurrentUser, addBearerAuthHeader, addBearerAuth }
+  return { currentUser, login, fetchCurrentUser, addBearerAuth }
 })

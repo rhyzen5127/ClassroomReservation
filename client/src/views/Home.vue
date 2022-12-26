@@ -47,9 +47,7 @@
 import ClassroomCard from '@/components/ClassroomCard.vue'
 import ClassroomSelector from '@/components/ClassroomSelector.vue'
 import EventCalendar from '@/components/EventCalendar.vue'
-import { useReservationStore } from '@/stores/reservations.js'
-import { useBuildingStore } from '@/stores/buildings.js'
-import { useClassroomStore } from '@/stores/classrooms.js'
+import { useStores } from '@/stores/index.js'
 
 export default {
   name: 'Home',
@@ -117,7 +115,7 @@ export default {
 
       if (this.room) {
 
-        this.reservationStore.fetchFromClassroom(this.room.id, params).then(res => {
+        this.stores.reservation.fetchFromClassroom(this.room.id, params).then(res => {
           this.reservations = res
         }).catch(err => {
           console.error("Failed to fetch reservations: " + err)
@@ -125,7 +123,7 @@ export default {
 
       } else if (this.building) {
 
-        this.reservationStore.fetchFromBuilding(this.building.id, params).then(res => {
+        this.stores.reservation.fetchFromBuilding(this.building.id, params).then(res => {
           this.reservations = res
         }).catch(err => {
           console.error("Failed to fetch reservations: " + err)
@@ -133,7 +131,7 @@ export default {
 
       } else {
 
-        this.reservationStore.fetchAll(params).then(res => {
+        this.stores.reservation.fetchAll(params).then(res => {
           this.reservations = res
         }).catch(err => {
           console.error("Failed to fetch reservations: " + err)
@@ -154,18 +152,22 @@ export default {
       this.classroom_item = []
       this.room = null
 
-      this.classroomStore.fetchClassroomInBuilding(newVal.id).then(res => {
+      this.stores.classroom.fetchClassroomInBuilding(newVal.id)
+      .then(res => {
         this.classroom_item = res
-      }).catch(err => {
+      })
+      .catch(err => {
         console.error("Cannot fetch classrooms data: " + err.message)
       })
 
-      this.reservationStore.fetchFromBuilding(newVal.id, {
+      this.stores.reservation.fetchFromBuilding(newVal.id, {
         minReserveTime: this.startTime,
         maxReserveTime: this.finishTime
-      }).then(res => {
+      })
+      .then(res => {
         this.reservations = res
-      }).catch(err => {
+      })
+      .catch(err => {
         console.error("Cannot fetch reservations: " + err.message)
       })
 
@@ -176,7 +178,7 @@ export default {
 
       if (!newVal) return
 
-      this.reservationStore.fetchFromClassroom(newVal.id, {
+      this.stores.reservation.fetchFromClassroom(newVal.id, {
         minReserveTime: this.startTime,
         maxReserveTime: this.finishTime
       }).then(res => {
@@ -207,14 +209,12 @@ export default {
 
   setup() {
     return {
-      reservationStore: useReservationStore(),
-      buildingStore: useBuildingStore(),
-      classroomStore: useClassroomStore()
+      stores: useStores()
     }
   },
 
   mounted() {
-    this.buildingStore.fetchAll().then(res => {
+    this.stores.building.fetchAll().then(res => {
       this.building_item = res
     }).catch(err => {
       console.log(err)

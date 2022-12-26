@@ -59,7 +59,6 @@
           ></v-switch>
         </div>
 
-        <div class="d-flex justify-center">{{ editStatus }}</div>
 
         <div class="d-flex justify-center">
           <v-btn
@@ -91,14 +90,22 @@
     <v-row class="mt-2 mx-5">
       <v-row justify="center"> </v-row>
     </v-row>
+
+    <v-snackbar
+      v-model="showEditStatus"
+      :color="editSuccess ? 'green' : 'red'"
+      :timeout="2000"
+    >
+      {{ editStatus }}
+    </v-snackbar>
   </div>
 </template>
   
 <script>
-import { useClassroomStore } from "@/stores/classrooms";
 
 import { defineComponent } from "vue";
 import ClassroomSelector from "../components/ClassroomSelector.vue";
+import { useStores } from "../stores";
 
 export default defineComponent({
   name: "Reservation",
@@ -115,6 +122,8 @@ export default defineComponent({
 
     editable: false,
     editStatus: null,
+    showEditStatus: false,
+    editSuccess: false,
 
     building_item: [],
     classroom_items: [],
@@ -161,11 +170,15 @@ export default defineComponent({
     },
 
     submitUpdateClassroom() {
-      let updatedSeats = this.room.seats != this.seats ? this.seats : undefined;
-      let updatedStatus =
-        this.room.status != this.status ? this.status : undefined;
+
+      this.showEditStatus = false
+      this.editSuccess = false
       this.loading = true;
-      this.classroomStore
+
+      let updatedSeats = this.room.seats != this.seats ? this.seats : undefined;
+      let updatedStatus = this.room.status != this.status ? this.status : undefined;
+
+      this.stores.classroom
         .updateClassroom(
           localStorage.cookie,
           this.room.id,
@@ -174,16 +187,21 @@ export default defineComponent({
           this.roomDetail
         )
         .then(() => {
-          this.editStatus = "แก้ไขสำเร็จ !";
           this.room.seats = updatedSeats;
           this.room.status = updatedStatus;
           this.room.note = this.roomDetail;
           this.loading = false;
+
+          this.editStatus = "แก้ไขสำเร็จ !";
+          this.showEditStatus = true
+          this.editSuccess = true
         })
         .catch((err) => {
           console.error(err);
-          this.editStatus = "เกิดข้อผิดพลาด กรุณาลองใหม่ในภายหลัง";
           this.loading = false;
+          this.editStatus = "เกิดข้อผิดพลาด กรุณาลองใหม่ในภายหลัง";
+          this.showEditStatus = true
+          this.editSuccess = false
         });
     },
   },
@@ -192,8 +210,22 @@ export default defineComponent({
 
   setup() {
     return {
-      classroomStore: useClassroomStore(),
+      stores: useStores()
     };
+  },
+
+  beforeMount() {
+    // check if user is logged in and is a staff or not, if no then redirect to homepage
+    this.stores.user.fetchCurrentUser(localStorage.getItem('cookie'))
+    .then(userData => {
+      if (userData.role != 'staff') {
+      this.$router.replace("/")
+      }
+    })
+    .catch(() => {
+      this.$router.replace("/")
+    })
+
   },
 
   mounted() {},

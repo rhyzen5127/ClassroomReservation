@@ -80,9 +80,7 @@
 import ClassroomCard from "@/components/ClassroomCard.vue";
 import EventCalendar from "@/components/EventCalendar.vue";
 import ClassroomReportTable from "@/components/ClassroomReportTable.vue";
-import { useReservationStore } from "@/stores/reservations.js";
-import { useBuildingStore } from "@/stores/buildings.js";
-import { useClassroomStore } from "@/stores/classrooms.js";
+import { useStores } from '../stores';
 
 export default {
   name: "Report",
@@ -154,7 +152,7 @@ export default {
       };
 
       if (this.room) {
-        this.reservationStore
+        this.stores.reservation
           .fetchFromClassroom(this.room.id, params)
           .then((res) => {
             this.reservations = res;
@@ -165,7 +163,7 @@ export default {
           });
       } 
       else if (this.building) {
-        this.reservationStore
+        this.stores.reservation
           .fetchFromBuilding(this.building.id, params)
           .then((res) => {
             this.reservations = res;
@@ -176,7 +174,7 @@ export default {
           });
       } 
       else {
-        this.reservationStore
+        this.stores.reservation
           .fetchAll(params)
           .then((res) => {
             this.reservations = res;
@@ -228,7 +226,7 @@ export default {
 
     exportReservationSchedules()
     {
-      this.reservationStore.exportPDF(this.reservationToExport.map(v => ({ id: parseInt(v.id), note: v.note })))
+      this.stores.reservation.exportPDF(this.reservationToExport.map(v => ({ id: parseInt(v.id), note: v.note })))
       .then(res => {
         var fileURL = window.URL.createObjectURL(new Blob([ res ], { type: "application/pdf"} ))
         var fileLink = document.createElement('a')
@@ -252,7 +250,7 @@ export default {
       this.classroom_item = [];
       this.room = null;
 
-      this.classroomStore
+      this.stores.classroom
         .fetchClassroomInBuilding(newVal.id)
         .then((res) => {
           this.classroom_item = res;
@@ -261,34 +259,12 @@ export default {
           console.error("Cannot fetch classrooms data: " + err.message);
         });
 
-      this.reservationStore
-        .fetchFromBuilding(newVal.id, {
-          minReserveTime: this.startTime,
-          maxReserveTime: this.finishTime,
-        })
-        .then((res) => {
-          this.reservations = res;
-        })
-        .catch((err) => {
-          console.error("Cannot fetch reservations: " + err.message);
-        });
+      this.loadReservations()
     },
 
     room(newVal) {
-      if (!newVal) return;
-
-      this.reservationStore
-        .fetchFromClassroom(newVal.id, {
-          minReserveTime: this.startTime,
-          maxReserveTime: this.finishTime,
-        })
-        .then((res) => {
-          this.reservations = res;
-        })
-        .catch((err) => {
-          console.error("Cannot fetch reservations: " + err.message);
-        });
-    },
+      this.loadReservations()
+    }
   },
 
   computed: {
@@ -308,14 +284,26 @@ export default {
 
   setup() {
     return {
-      reservationStore: useReservationStore(),
-      buildingStore: useBuildingStore(),
-      classroomStore: useClassroomStore(),
+      stores: useStores()
     };
   },
 
+  beforeMount() {
+    // check if user is logged in and is a staff or not, if no then redirect to homepage
+    this.stores.user.fetchCurrentUser(localStorage.getItem('cookie'))
+    .then(userData => {
+      if (userData.role != 'staff') {
+      this.$router.replace("/")
+      }
+    })
+    .catch(() => {
+      this.$router.replace("/")
+    })
+
+  },
+
   mounted() {
-    this.buildingStore
+    this.stores.building
       .fetchAll()
       .then((res) => {
         this.building_item = res;
